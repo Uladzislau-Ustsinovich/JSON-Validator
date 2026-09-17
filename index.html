@@ -164,6 +164,36 @@
 
   .tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
 
+  .version-picker { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-muted); }
+  .version-picker span { text-transform: uppercase; letter-spacing: .04em; font-size: 11px; color: var(--text-faint); }
+  .version-picker select {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    padding: 5px 9px;
+    cursor: pointer;
+  }
+  .version-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: var(--accent-weak);
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--accent-text);
+  }
+  .version-banner strong { font-weight: 600; }
+  table.versions { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  table.versions th, table.versions td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.versions th { background: var(--surface-2); font-weight: 600; }
+  table.versions code { font-family: var(--mono); font-size: 11.5px; }
+
   .tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -490,6 +520,10 @@
       <h1>UI Configuration Validator</h1>
       <span class="sub">firm <code>uiConfig</code> &middot; advisor &amp; investor</span>
     </div>
+    <label class="version-picker">
+      <span>Version</span>
+      <select id="version" aria-label="Release the firm is on"></select>
+    </label>
     <div class="tabs" role="tablist">
       <button class="tab" id="tab-validate" role="tab" aria-selected="true" aria-controls="view-validate">Validator</button>
       <button class="tab" id="tab-docs" role="tab" aria-selected="false" aria-controls="view-docs">Documentation</button>
@@ -633,6 +667,49 @@
         every individual line.
       </p>
 
+      <h2>Versions</h2>
+      <p>
+        The <strong>Version</strong> picker at the top of the page selects the release to validate against.
+        It changes the allowed values, the defaults and this field reference, and it is remembered between visits.
+        Pick the release the firm is actually running &mdash; a value that is fine on <code>develop</code> can be
+        rejected on an older release.
+      </p>
+      <p id="version-summary"></p>
+      <table class="versions">
+        <thead>
+          <tr><th>What differs</th><th>6.0 and 6.1</th><th>6.2 (develop)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>defaultPageLevelDateRange</code></td>
+            <td>No <code>10_years</code>, <code>15_years</code> or <code>20_years</code></td>
+            <td>All three available</td>
+          </tr>
+          <tr>
+            <td><code>emailAssistant.actions</code></td>
+            <td>Defaults to 5 built-in actions, so a shorter array overlays them instead of replacing them</td>
+            <td>Defaults to <code>[]</code>, so your array is the whole list</td>
+          </tr>
+          <tr>
+            <td><code>emailAssistant.tones</code></td>
+            <td>Defaults to 4 built-in tones, same overlay behaviour</td>
+            <td>Defaults to <code>[]</code></td>
+          </tr>
+          <tr>
+            <td>Everything else</td>
+            <td colspan="2">Identical. Same fields, same nesting, same navigation-widget rules including the six-card cap.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>The email assistant is the trap when downgrading</strong>
+        <p>
+          On 6.0 and 6.1, sending two tones does not give a firm two tones. Positions 1&ndash;2 are your entries
+          merged key by key over the first two built-ins, and positions 3&ndash;4 are the remaining built-ins,
+          untouched. The same configuration on 6.2 yields exactly the two tones you sent.
+        </p>
+      </div>
+
       <h2>Field reference</h2>
       <div class="search-row" style="margin:12px 0">
         <input type="search" id="doc-search" placeholder="Filter fields, e.g. pageTitle or reports" aria-label="Filter fields" />
@@ -674,7 +751,8 @@
    * 1. Source of truth: enum values mirrored from the application code
    * ===================================================================== */
 
-  var DATE_RANGE_VALUES = [
+  /* DATE_RANGES, as of develop (6.2). 6.0 and 6.1 lack the three long horizons. */
+  var DATE_RANGES_62 = [
     'today', 'day', 'two_days', 'week', 'last_month', 'month', 'last_quarter', 'quarter',
     'last_6_months', '6_months', 'ytd', 'mtd', 'qtd', 'last_year', 'year', '2_years',
     'last_3_years', '3_years', '5_years', '10_years', '15_years', '20_years', 'custom',
@@ -682,15 +760,21 @@
     'last_quarterly', 'last_annually'
   ];
 
+  var DATE_RANGES_ADDED_IN_62 = ['10_years', '15_years', '20_years'];
+
+  var DATE_RANGES_60 = DATE_RANGES_62.filter(function (value) {
+    return DATE_RANGES_ADDED_IN_62.indexOf(value) === -1;
+  });
+
   var NAV_ICONS = ['investments', 'activity', 'documents', 'income', 'settings', 'deposits', 'link'];
 
   var INVESTOR_CALC_CODES = ['trend_aum', 'trend_cumul_ret'];
 
   /* =====================================================================
-   * 2. DEFAULT_UI_CONFIGURATION, verbatim
+   * 2. DEFAULT_UI_CONFIGURATION, verbatim (develop / 6.2)
    * ===================================================================== */
 
-  var DEFAULTS = {
+  var DEFAULTS_62 = {
     investor: {
       home: {
         pageTitle: { en: 'Home', fr: 'Accueil' },
@@ -809,6 +893,100 @@
   };
 
   /* =====================================================================
+   * 2b. Versions
+   *
+   * 6.0 and 6.1 carry an identical configuration schema. They differ from
+   * develop (6.2) in two ways that change what a firm should send:
+   *
+   *   - DATE_RANGES has no 10_years / 15_years / 20_years.
+   *   - emailAssistant ships 5 built-in actions and 4 built-in tones, where
+   *     6.2 ships empty arrays. Because the merge is index-based, that is the
+   *     difference between replacing the list and overlaying it.
+   *
+   * The built-in action and tone entries are firm-internal (prompt templates
+   * and agent ids), so they are represented here by their shape and count
+   * rather than reproduced. That is all the validator needs.
+   * ===================================================================== */
+
+  var BUILT_IN_ARRAYS_60 = {
+    'advisor.emailAssistant.actions': { count: 5, summary: '5 built-in actions' },
+    'advisor.emailAssistant.tones': { count: 4, summary: '4 built-in tones' }
+  };
+
+  var VERSIONS = [
+    {
+      key: '6.0',
+      label: '6.0',
+      branch: 'version-6.0',
+      defaults: DEFAULTS_62,
+      builtInArrays: BUILT_IN_ARRAYS_60,
+      enums: { dateRanges: DATE_RANGES_60 }
+    },
+    {
+      key: '6.1',
+      label: '6.1',
+      branch: 'version-6.1',
+      defaults: DEFAULTS_62,
+      builtInArrays: BUILT_IN_ARRAYS_60,
+      enums: { dateRanges: DATE_RANGES_60 }
+    },
+    {
+      key: '6.2',
+      label: '6.2 (develop)',
+      branch: 'develop',
+      defaults: DEFAULTS_62,
+      builtInArrays: {},
+      enums: { dateRanges: DATE_RANGES_62 }
+    }
+  ];
+
+  var LATEST_VERSION = VERSIONS[VERSIONS.length - 1];
+  var ACTIVE = LATEST_VERSION;
+
+  function versionByKey(key) {
+    for (var i = 0; i < VERSIONS.length; i++) {
+      if (VERSIONS[i].key === key) return VERSIONS[i];
+    }
+    return null;
+  }
+
+  /** Allowed values for an enum node, which can vary by version. */
+  function nodeValues(node) {
+    return node.valuesKey ? ACTIVE.enums[node.valuesKey] : node.values;
+  }
+
+  /** Other versions where `value` is legal for this node. */
+  function versionsAllowing(node, value) {
+    if (!node.valuesKey) return [];
+    return VERSIONS.filter(function (version) {
+      return version !== ACTIVE && version.enums[node.valuesKey].indexOf(value) !== -1;
+    });
+  }
+
+  function deepClone(value) { return JSON.parse(JSON.stringify(value)); }
+
+  /**
+   * A defaults document to hand the user. Arrays whose built-in entries are not
+   * reproduced here are omitted rather than shown as empty, since sending []
+   * would not clear them anyway.
+   */
+  function activeDefaultsDocument() {
+    var document_ = deepClone(ACTIVE.defaults);
+    Object.keys(ACTIVE.builtInArrays).forEach(function (path) { deletePath(document_, path); });
+    return document_;
+  }
+
+  /** How many entries this array has by default in the active version. */
+  function defaultArrayInfo(path) {
+    var builtIn = ACTIVE.builtInArrays[path];
+    if (builtIn) return builtIn;
+    var value = getByPath(ACTIVE.defaults, path);
+    return Array.isArray(value)
+      ? { count: value.length, summary: preview(value) }
+      : { count: 0, summary: '[]' };
+  }
+
+  /* =====================================================================
    * 3. Schema
    * ===================================================================== */
 
@@ -868,7 +1046,7 @@
     investor: obj('Everything the investor portal reads. Page-specific options are nested under the page key; options that affect more than one page sit directly on "investor".', {
       home: obj('The investor "Home" page.', {
         pageTitle: i18n(PAGE_TITLE_DESC),
-        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES),
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, null, { valuesKey: 'dateRanges' }),
         advisoryTeamTitle: i18n('Replaces the default heading of the "Advisory Team" section.'),
         navigationWidget: obj('The "What can we help you with today" widget. When visible it takes the place of the line graph on Home.', {
           visibility: bool('Whether the widget replaces the Home line graph.'),
@@ -886,15 +1064,15 @@
       }),
       investments: obj('The investor "Investments" page.', {
         pageTitle: i18n(PAGE_TITLE_DESC),
-        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, null, { valuesKey: 'dateRanges' })
       }),
       activity: obj('The investor "Activity" page.', {
         pageTitle: i18n(PAGE_TITLE_DESC),
-        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, null, { valuesKey: 'dateRanges' })
       }),
       documents: obj('The investor "Documents" page.', {
         pageTitle: i18n(PAGE_TITLE_DESC),
-        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, null, { valuesKey: 'dateRanges' })
       }),
       settings: obj('The investor "Settings" page. Title only \u2014 this page has no page-level date range.', {
         pageTitle: i18n(PAGE_TITLE_DESC)
@@ -994,7 +1172,7 @@
       case 'object': return 'object';
       case 'boolean': return 'boolean';
       case 'string': return 'string';
-      case 'enum': return node.values.length <= 3 ? node.values.map(quote).join(' | ') : 'enum';
+      case 'enum': return nodeValues(node).length <= 3 ? nodeValues(node).map(quote).join(' | ') : 'enum';
       case 'i18n': return '{ en, fr }';
       case 'array': return 'array';
       case 'record': return 'map';
@@ -1006,7 +1184,7 @@
 
   function getByPath(root, path) {
     if (!path) return root;
-    var parts = path.split('.');
+    var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
     var cursor = root;
     for (var i = 0; i < parts.length; i++) {
       if (cursor === null || typeof cursor !== 'object') return undefined;
@@ -1080,7 +1258,7 @@
       if (!Object.prototype.hasOwnProperty.call(node.fields, field)) continue;
       if (Object.prototype.hasOwnProperty.call(value, field)) continue;
       var fieldPath = path ? path + '.' + field : field;
-      var fallback = getByPath(DEFAULTS, fieldPath);
+      var fallback = getByPath(ACTIVE.defaults, fieldPath);
       add('info', path, 'Not set: ' + field,
         'No value provided, so the default applies.',
         fallback === undefined ? '' : '<code>' + escapeHtml(preview(fallback)) + '</code>');
@@ -1189,7 +1367,29 @@
       return;
     }
     for (var i = 0; i < value.length; i++) walk(value[i], node.item, path + '[' + i + ']', add);
+    checkIndexMerge(value, node, path, add);
     if (node.check) node.check(value, path, add);
+  }
+
+  /**
+   * lodash merge combines arrays position by position, so an array shorter than
+   * the version's default keeps the default entries in the tail positions.
+   */
+  function checkIndexMerge(value, node, path, add) {
+    var fallback = defaultArrayInfo(path);
+    if (!fallback.count || value.length >= fallback.count) return;
+
+    var hidable = node.item.kind === 'object' &&
+      Object.prototype.hasOwnProperty.call(node.item.fields, 'visibility');
+
+    add('warning', path, 'Shorter than the default array',
+      'You supplied ' + value.length + ' entr' + (value.length === 1 ? 'y' : 'ies') +
+      ', but ' + ACTIVE.label + ' defaults to ' + fallback.summary + '. Arrays merge by index, so the ' +
+      'defaults at positions ' + (value.length + 1) + '–' + fallback.count +
+      ' survive, and your entries are overlaid key by key onto the defaults they line up with.',
+      hidable
+        ? 'Send all ' + fallback.count + ' entries and set <code>"visibility": false</code> on the ones you want hidden.'
+        : 'Send all ' + fallback.count + ' entries, including the ones you want disabled with <code>"enabled": false</code>.');
   }
 
   function walkRecord(value, node, path, add) {
@@ -1228,32 +1428,37 @@
   }
 
   function walkEnum(value, node, path, add) {
+    var values = nodeValues(node);
+    var supported = 'Supported in ' + ACTIVE.label + ': ' +
+      values.map(function (v) { return '<code>' + escapeHtml(v) + '</code>'; }).join(', ') + '.';
+
     if (typeof value !== 'string') {
-      add('error', path, 'Wrong type', 'Expected one of the supported string values, found ' + describeType(value) + '.',
-        'Supported: ' + node.values.map(function (v) { return '<code>' + escapeHtml(v) + '</code>'; }).join(', ') + '.');
+      add('error', path, 'Wrong type',
+        'Expected one of the supported string values, found ' + describeType(value) + '.', supported);
       return;
     }
-    if (node.values.indexOf(value) !== -1) return;
+    if (values.indexOf(value) !== -1) return;
 
-    var near = closestMatch(value, node.values);
+    /* A value that is legal in another version is a version mismatch, not a typo. */
+    var elsewhere = versionsAllowing(node, value);
+    if (elsewhere.length) {
+      add('error', path, 'Not available in this version',
+        '<code>' + escapeHtml(value) + '</code> is not a value ' + ACTIVE.label + ' accepts. It is available in ' +
+        elsewhere.map(function (version) { return version.label; }).join(', ') + '.',
+        'Either pick a value ' + ACTIVE.label + ' supports, or switch the schema version at the top of the page ' +
+        'if this firm is on a newer release.');
+      return;
+    }
+
+    var near = closestMatch(value, values);
     add('error', path, 'Unsupported value',
       '<code>' + escapeHtml(value) + '</code> is not a value this field accepts.',
-      (near ? 'Did you mean <code>' + escapeHtml(near) + '</code>? ' : '') +
-      'Supported: ' + node.values.map(function (v) { return '<code>' + escapeHtml(v) + '</code>'; }).join(', ') + '.');
+      (near ? 'Did you mean <code>' + escapeHtml(near) + '</code>? ' : '') + supported);
   }
 
   /* ---- field-specific rules ---- */
 
   SCHEMA.fields.investor.fields.home.fields.navigationWidget.fields.cards.check = function (cards, path, add) {
-    var defaults = DEFAULTS.investor.home.navigationWidget.cards;
-    if (cards.length < defaults.length) {
-      add('warning', path, 'Shorter than the default array',
-        'You supplied ' + cards.length + ' card' + (cards.length === 1 ? '' : 's') + ' but the default has ' +
-        defaults.length + '. Arrays are merged by index, so the default cards at positions ' +
-        (cards.length + 1) + '\u2013' + defaults.length + ' survive and still render.',
-        'Send all ' + defaults.length + ' entries and set <code>"visibility": false</code> on the ones you want hidden.');
-    }
-
     var visible = 0;
     for (var i = 0; i < cards.length; i++) {
       if (cards[i] && cards[i].visibility === true) visible++;
@@ -1772,6 +1977,7 @@
     groupIssues(issues).forEach(function (issue) { counts[issue.severity]++; });
 
     var parts = [];
+    parts.push('<span class="chip muted"><span class="dot"></span>' + escapeHtml(ACTIVE.label) + '</span>');
     if (!counts.error && !counts.warning) {
       parts.push('<span class="chip ok"><span class="dot"></span>Configuration is valid</span>');
     }
@@ -1987,7 +2193,7 @@
   });
 
   $('btn-defaults').addEventListener('click', function () {
-    load(JSON.stringify(DEFAULTS, null, 2));
+    load(JSON.stringify(activeDefaultsDocument(), null, 2));
   });
 
   var SAMPLE_BROKEN = {
@@ -2060,6 +2266,31 @@
   $('tab-validate').addEventListener('click', function () { showTab('validate'); });
   $('tab-docs').addEventListener('click', function () { showTab('docs'); });
 
+  /* ---- version ---- */
+
+  function initVersionPicker() {
+    var select = $('version');
+    select.innerHTML = VERSIONS.map(function (version) {
+      return '<option value="' + version.key + '">' + escapeHtml(version.label) + '</option>';
+    }).join('');
+
+    var stored = null;
+    try { stored = localStorage.getItem('uicv-version'); } catch (e) { /* private mode */ }
+    var initial = versionByKey(stored) || LATEST_VERSION;
+    ACTIVE = initial;
+    select.value = initial.key;
+
+    select.addEventListener('change', function () {
+      var next = versionByKey(select.value);
+      if (!next) return;
+      ACTIVE = next;
+      try { localStorage.setItem('uicv-version', next.key); } catch (e) { /* ignore */ }
+      renderDocs();
+      if (input.value.trim()) verify();
+      toast('Validating against ' + next.label);
+    });
+  }
+
   /* ---- theme ---- */
 
   var storedTheme = null;
@@ -2082,6 +2313,10 @@
     var container = $('doc-tree');
     container.innerHTML = renderNodeFields(SCHEMA, '', 0);
 
+    $('version-summary').innerHTML =
+      'This page currently describes <strong>' + escapeHtml(ACTIVE.label) + '</strong>, mirrored from the <code>' +
+      escapeHtml(ACTIVE.branch) + '</code> branch.';
+
     $('sample-min').textContent = JSON.stringify({
       investor: {
         home: { pageTitle: { en: 'Overview', fr: 'Aper\u00e7u' } },
@@ -2093,7 +2328,7 @@
       }
     }, null, 2);
 
-    $('sample-full').textContent = JSON.stringify(DEFAULTS, null, 2);
+    $('sample-full').textContent = JSON.stringify(activeDefaultsDocument(), null, 2);
   }
 
   function renderNodeFields(node, basePath, depth) {
@@ -2106,7 +2341,7 @@
   }
 
   function renderField(key, node, path, depth) {
-    var defaultValue = getByPath(DEFAULTS, path.replace(/\[\]/g, '.0'));
+    var defaultValue = getByPath(ACTIVE.defaults, path.replace(/\[\]/g, '.0'));
     var rows = [];
 
     rows.push('<dt>Path</dt><dd><code>' + escapeHtml(path) + '</code></dd>');
@@ -2114,7 +2349,7 @@
 
     if (node.kind === 'enum') {
       rows.push('<dt>Allowed</dt><dd><div class="vals">' +
-        node.values.map(function (v) { return '<span class="val">' + escapeHtml(JSON.stringify(v)) + '</span>'; }).join('') +
+        nodeValues(node).map(function (v) { return '<span class="val">' + escapeHtml(JSON.stringify(v)) + '</span>'; }).join('') +
         '</div></dd>');
     }
     if (node.kind === 'boolean') {
@@ -2125,7 +2360,11 @@
     }
     var insideEntry = path.indexOf('[]') !== -1 || path.indexOf('.*') !== -1;
 
-    if (defaultValue !== undefined) {
+    var builtIn = ACTIVE.builtInArrays[path];
+    if (builtIn) {
+      rows.push('<dt>Default</dt><dd>' + escapeHtml(builtIn.summary) + ' in ' + escapeHtml(ACTIVE.label) +
+        ' <span style="color:var(--text-faint)">\u2014 a shorter array overlays them rather than replacing them</span></dd>');
+    } else if (defaultValue !== undefined) {
       rows.push('<dt>' + (insideEntry ? 'Example' : 'Default') + '</dt><dd><code>' +
         escapeHtml(preview(defaultValue)) + '</code>' +
         (insideEntry ? ' <span style="color:var(--text-faint)">\u2014 from the first default entry</span>' : '') + '</dd>');
@@ -2163,7 +2402,7 @@
 
   function fullTypeLabel(node) {
     switch (node.kind) {
-      case 'enum': return node.values.map(quote).join(' | ');
+      case 'enum': return nodeValues(node).map(quote).join(' | ');
       case 'array': return 'Array<' + (node.item.kind === 'object' ? 'object' : fullTypeLabel(node.item)) + '>';
       case 'record': return 'Record<string, object>';
       case 'i18n': return '{ en: string; fr: string }';
@@ -2171,6 +2410,7 @@
     }
   }
 
+  initVersionPicker();
   renderDocs();
 
   $('doc-search').addEventListener('input', function (event) {
