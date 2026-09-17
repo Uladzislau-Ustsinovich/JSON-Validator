@@ -1,5 +1,7 @@
 # UI Configuration Validator
 
+**→ [uladzislau-ustsinovich.github.io/JSON-Validator](https://uladzislau-ustsinovich.github.io/JSON-Validator/)**
+
 A single-page tool for checking a firm's UI configuration JSON (`FirmConfiguration.uiConfig`,
 typed as `IUiConfiguration`) before it is saved.
 
@@ -24,21 +26,18 @@ It also flags the two behaviours that cause most support tickets:
   default cards in the tail positions;
 - a quoted `"false"` is truthy, so it switches a feature **on**.
 
-## Hosting on GitHub Pages
+Keys the team adds on purpose — `Note`, `Note2`, `showApiTagVersion-WARNING`, anything ending in
+`-WARNING` / `-NOTE` / `-TODO` or starting with `_` — are reported as notes, not errors. JSON has
+no comment syntax, and those keys are how a note gets left in the file.
 
-```bash
-git init
-git add index.html README.md
-git commit -m "Add UI configuration validator"
-git remote add origin git@github.com:<org>/<repo>.git
-git push -u origin main
-```
+## Hosting
 
-Then in the repository: **Settings → Pages → Source: Deploy from a branch**, branch `main`,
-folder `/ (root)`. The page is served at `https://<org>.github.io/<repo>/`.
+The page is served from GitHub Pages at
+[uladzislau-ustsinovich.github.io/JSON-Validator](https://uladzislau-ustsinovich.github.io/JSON-Validator/),
+built from `index.html` on `main`. Pushing to `main` redeploys it within a minute or two.
 
-`index.html` has no dependencies, so it works just as well opened directly from disk or served
-from any static host.
+`index.html` has no dependencies and makes no network calls, so it works just as well opened
+straight from disk or served from any other static host.
 
 ## Keeping it in sync with the code
 
