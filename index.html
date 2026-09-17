@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UI Configuration Validator</title>
+<meta name="description" content="Validate, format and document the firm UI configuration JSON used by the d1g1t advisor and investor apps." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f7b6c'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #f5f7f9;
+    --surface: #ffffff;
+    --surface-2: #eef1f4;
+    --border: #dde2e8;
+    --border-strong: #c4ccd5;
+    --text: #1a1f27;
+    --text-muted: #58616d;
+    --text-faint: #8a939e;
+    --accent: #0f7b6c;
+    --accent-weak: #e3f1ee;
+    --accent-text: #0b5c51;
+    --error: #b3261e;
+    --error-weak: #fdecea;
+    --warn: #96590f;
+    --warn-weak: #fdf3e3;
+    --info: #1c5a97;
+    --info-weak: #eaf1f9;
+    --ok: #17734f;
+    --code-key: #1c5a97;
+    --code-string: #0f7b6c;
+    --code-number: #7d3cae;
+    --code-bool: #9c5116;
+    --shadow-sm: 0 1px 2px rgba(20, 30, 40, .06);
+    --shadow: 0 1px 2px rgba(20, 30, 40, .05), 0 8px 24px rgba(20, 30, 40, .07);
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141a;
+      --surface: #181c23;
+      --surface-2: #1f242c;
+      --border: #2b313a;
+      --border-strong: #3b434f;
+      --text: #e6e9ee;
+      --text-muted: #a3acb8;
+      --text-faint: #7b8593;
+      --accent: #48b7a3;
+      --accent-weak: #16302c;
+      --accent-text: #6fd0bd;
+      --error: #f08b82;
+      --error-weak: #331b19;
+      --warn: #e0ad63;
+      --warn-weak: #2f2517;
+      --info: #7fb3e6;
+      --info-weak: #17232f;
+      --ok: #62c79d;
+      --code-key: #7fb3e6;
+      --code-string: #6fd0bd;
+      --code-number: #c69bea;
+      --code-bool: #e2a06b;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #11141a;
+    --surface: #181c23;
+    --surface-2: #1f242c;
+    --border: #2b313a;
+    --border-strong: #3b434f;
+    --text: #e6e9ee;
+    --text-muted: #a3acb8;
+    --text-faint: #7b8593;
+    --accent: #48b7a3;
+    --accent-weak: #16302c;
+    --accent-text: #6fd0bd;
+    --error: #f08b82;
+    --error-weak: #331b19;
+    --warn: #e0ad63;
+    --warn-weak: #2f2517;
+    --info: #7fb3e6;
+    --info-weak: #17232f;
+    --ok: #62c79d;
+    --code-key: #7fb3e6;
+    --code-string: #6fd0bd;
+    --code-number: #c69bea;
+    --code-bool: #e2a06b;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent-text); }
+
+  /* ---------- header ---------- */
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    max-width: 1560px;
+    margin: 0 auto;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+
+  .brand-mark {
+    font-weight: 700;
+    letter-spacing: -.02em;
+    font-size: 16px;
+    color: var(--accent-text);
+    background: var(--accent-weak);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    padding: 3px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .brand h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+
+  .brand .sub { color: var(--text-faint); font-size: 12.5px; }
+
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 8px; }
+
+  .tab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+
+  .tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- buttons ---------- */
+
+  button {
+    appearance: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  button:hover { background: var(--surface-2); }
+
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  :root[data-theme="dark"] button.primary, :root:not([data-theme="light"]) button.primary { color: #06120f; }
+
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) button.primary { color: #fff; } }
+
+  button.primary:hover { filter: brightness(1.07); background: var(--accent); }
+
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  button.icon { padding: 6px 9px; }
+
+  /* ---------- layout ---------- */
+
+  main { max-width: 1560px; margin: 0 auto; padding: 16px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .panel-title { font-weight: 600; font-size: 13px; margin-right: auto; display: flex; align-items: center; gap: 8px; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+
+  @media (max-width: 1080px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- editor ---------- */
+
+  .editor-wrap { display: flex; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; background: var(--surface); }
+
+  .gutter {
+    flex: 0 0 auto;
+    padding: 12px 8px 12px 12px;
+    text-align: right;
+    color: var(--text-faint);
+    background: var(--surface-2);
+    border-right: 1px solid var(--border);
+    user-select: none;
+    overflow: hidden;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    resize: vertical;
+    padding: 12px;
+    font: inherit;
+    color: var(--text);
+    background: transparent;
+    tab-size: 2;
+    height: 62vh;
+    min-height: 320px;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+  }
+
+  #input:focus { outline: none; }
+
+  .statusbar {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 7px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .statusbar .spacer { margin-left: auto; }
+
+  kbd {
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 4px;
+    background: var(--surface);
+    color: var(--text-muted);
+  }
+
+  /* ---------- results ---------- */
+
+  .summary { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px; border-bottom: 1px solid var(--border); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.error { color: var(--error); background: var(--error-weak); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
+  .chip.warning { color: var(--warn); background: var(--warn-weak); border-color: color-mix(in srgb, var(--warn) 25%, transparent); }
+  .chip.info { color: var(--info); background: var(--info-weak); border-color: color-mix(in srgb, var(--info) 25%, transparent); }
+  .chip.ok { color: var(--ok); background: var(--accent-weak); border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
+  .chip.muted { color: var(--text-muted); background: var(--surface-2); border-color: var(--border); }
+  .chip button { padding: 0; border: 0; background: none; font-size: 12px; color: inherit; text-decoration: underline; cursor: pointer; }
+
+  .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); }
+  .filters label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+
+  .issues { max-height: 46vh; overflow: auto; }
+
+  .issue {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    background: var(--surface);
+    padding: 10px 12px;
+    cursor: pointer;
+    font: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .issue:hover { background: var(--surface-2); }
+  .issue.error { border-left-color: var(--error); }
+  .issue.warning { border-left-color: var(--warn); }
+  .issue.info { border-left-color: var(--info); }
+
+  .issue-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .badge.error { color: var(--error); background: var(--error-weak); }
+  .badge.warning { color: var(--warn); background: var(--warn-weak); }
+  .badge.info { color: var(--info); background: var(--info-weak); }
+
+  .issue .path { font-family: var(--mono); font-size: 12px; color: var(--text); font-weight: 600; word-break: break-all; }
+  .issue .lineno { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); margin-left: auto; }
+  .issue .msg { color: var(--text-muted); font-size: 12.5px; margin-top: 3px; }
+  .issue .hint { margin-top: 5px; font-size: 12.5px; color: var(--text); background: var(--surface-2); border-radius: 6px; padding: 6px 8px; }
+  .issue .hint code, .msg code, .doc code { font-family: var(--mono); font-size: 11.5px; background: color-mix(in srgb, var(--text) 8%, transparent); padding: 1px 4px; border-radius: 4px; }
+
+  .empty { padding: 28px 16px; text-align: center; color: var(--text-muted); }
+  .empty strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+
+  /* ---------- annotated json ---------- */
+
+  .annotated { font-family: var(--mono); font-size: 12.5px; line-height: 1.55; max-height: 60vh; overflow: auto; padding: 8px 0; }
+
+  .row { display: flex; align-items: flex-start; }
+  .row .n { flex: 0 0 52px; text-align: right; padding-right: 12px; color: var(--text-faint); user-select: none; font-variant-numeric: tabular-nums; }
+  .row .c { flex: 1 1 auto; white-space: pre; padding-right: 12px; min-width: 0; overflow-x: visible; }
+  .row.error { background: var(--error-weak); }
+  .row.warning { background: var(--warn-weak); }
+  .row.info { background: var(--info-weak); }
+  .row.flash { animation: flash 1.1s ease-out; }
+
+  @keyframes flash {
+    0%, 30% { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+    100% { background: transparent; }
+  }
+
+  .note { display: flex; }
+  .note .n { flex: 0 0 52px; }
+  .note .t { flex: 1 1 auto; font-family: var(--sans); font-size: 12px; padding: 1px 12px 3px 0; }
+  .note.error .t { color: var(--error); }
+  .note.warning .t { color: var(--warn); }
+  .note.info .t { color: var(--info); }
+  .note .t::before { content: "↳ "; opacity: .6; }
+
+  .tok-key { color: var(--code-key); }
+  .tok-str { color: var(--code-string); }
+  .tok-num { color: var(--code-number); }
+  .tok-bool { color: var(--code-bool); }
+  .tok-punc { color: var(--text-faint); }
+
+  /* ---------- docs ---------- */
+
+  .doc { max-width: 1000px; }
+  .doc h2 { font-size: 18px; margin: 28px 0 8px; letter-spacing: -.01em; }
+  .doc h2:first-child { margin-top: 4px; }
+  .doc h3 { font-size: 14px; margin: 20px 0 6px; }
+  .doc p { color: var(--text-muted); margin: 8px 0; }
+  .doc ul { color: var(--text-muted); margin: 8px 0; padding-left: 20px; }
+  .doc li { margin: 4px 0; }
+
+  .callout { border-left: 3px solid var(--warn); background: var(--warn-weak); border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 14px 0; }
+  .callout.info { border-left-color: var(--info); background: var(--info-weak); }
+  .callout strong { display: block; margin-bottom: 2px; color: var(--text); }
+  .callout p { margin: 2px 0; color: var(--text-muted); }
+
+  pre.sample { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow: auto; margin: 10px 0; }
+
+  .search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  input[type="search"], input[type="text"] {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    min-width: 220px;
+  }
+
+  .field { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; background: var(--surface); overflow: hidden; }
+  .field > summary { cursor: pointer; padding: 9px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; list-style: none; }
+  .field > summary::-webkit-details-marker { display: none; }
+  .field > summary::before { content: "▸"; color: var(--text-faint); font-size: 11px; width: 10px; }
+  .field[open] > summary::before { content: "▾"; }
+  .field > summary:hover { background: var(--surface-2); }
+  .field .fpath { font-family: var(--mono); font-size: 12.5px; font-weight: 600; word-break: break-all; }
+  .field .ftype { font-family: var(--mono); font-size: 11.5px; color: var(--accent-text); background: var(--accent-weak); padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+  .field .fopt { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
+  .field .fsum { color: var(--text-muted); font-size: 12.5px; flex-basis: 100%; margin-left: 20px; }
+  .field-body { padding: 4px 12px 12px 34px; border-top: 1px solid var(--border); }
+  .field-body dl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 12px; margin: 10px 0; font-size: 12.5px; }
+  .field-body dt { color: var(--text-faint); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+  .field-body dd { margin: 0; color: var(--text); word-break: break-word; }
+  .field-body dd code { font-family: var(--mono); font-size: 11.5px; }
+  .vals { display: flex; flex-wrap: wrap; gap: 5px; }
+  .val { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
+  .field-body .notes { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-muted); }
+  .nested { margin-left: 0; }
+
+  footer { max-width: 1560px; margin: 0 auto; padding: 24px 16px 40px; color: var(--text-faint); font-size: 12.5px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: var(--bg);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s, transform .18s;
+    z-index: 100;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    .header-inner { padding: 10px 16px; }
+    main { padding: 16px; }
+    .brand .sub { display: none; }
+    .row .n, .note .n { flex-basis: 34px; padding-right: 8px; }
+    .field-body { padding-left: 14px; }
+    .field-body dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .field-body dt { margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-mark">d1g1t inc</span>
+      <h1>UI Configuration Validator</h1>
+      <span class="sub">firm <code>uiConfig</code> &middot; advisor &amp; investor</span>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-validate" role="tab" aria-selected="true" aria-controls="view-validate">Validator</button>
+      <button class="tab" id="tab-docs" role="tab" aria-selected="false" aria-controls="view-docs">Documentation</button>
+    </div>
+    <button class="icon" id="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">◐</button>
+  </div>
+</header>
+
+<main>
+  <!-- ======================= VALIDATOR ======================= -->
+  <section id="view-validate" role="tabpanel" aria-labelledby="tab-validate">
+    <div class="grid">
+      <!-- input -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Your configuration JSON</span>
+          <button class="primary" id="btn-verify">Verify</button>
+          <button id="btn-format">Format</button>
+          <button id="btn-minify">Minify</button>
+          <button id="btn-copy">Copy</button>
+          <button id="btn-sample">Load example</button>
+          <button id="btn-defaults">Load defaults</button>
+          <button id="btn-clear">Clear</button>
+        </div>
+        <div class="editor-wrap">
+          <div class="gutter" id="gutter" aria-hidden="true">1</div>
+          <textarea id="input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+            placeholder="Paste the firm UI configuration JSON here, then press Verify (Cmd/Ctrl + Enter)."></textarea>
+        </div>
+        <div class="statusbar">
+          <span id="stat-lines">0 lines</span>
+          <span id="stat-chars">0 characters</span>
+          <span id="stat-parse">Not validated</span>
+          <span class="spacer"></span>
+          <span><kbd>Cmd</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> to verify</span>
+        </div>
+      </div>
+
+      <!-- results -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Verification result</span>
+          <button id="btn-fix" disabled title="Move misplaced fields to the location the app reads them from">Fix placement</button>
+          <button id="btn-copy-result" disabled>Copy annotated JSON</button>
+        </div>
+        <div class="summary" id="summary">
+          <span class="chip muted"><span class="dot"></span>Nothing checked yet</span>
+        </div>
+        <div class="filters">
+          <span>Show:</span>
+          <label><input type="checkbox" id="f-error" checked> Errors</label>
+          <label><input type="checkbox" id="f-warning" checked> Warnings</label>
+          <label><input type="checkbox" id="f-info"> Notes &amp; defaults in effect</label>
+        </div>
+        <div class="issues" id="issues">
+          <div class="empty">
+            <strong>No results yet</strong>
+            Paste a configuration and press <em>Verify</em>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px" id="annotated-panel">
+      <div class="panel-head">
+        <span class="panel-title">Annotated JSON</span>
+        <span style="color:var(--text-faint);font-size:12px">Normalised to the canonical key order &mdash; highlighted rows carry findings</span>
+      </div>
+      <div class="annotated" id="annotated">
+        <div class="empty">The annotated, canonically ordered view of your configuration appears here after verification.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= DOCS ======================= -->
+  <section id="view-docs" role="tabpanel" aria-labelledby="tab-docs" class="hidden">
+    <div class="doc">
+      <h2>What this configuration is</h2>
+      <p>
+        The firm UI configuration is a single JSON object stored on the firm record (<code>FirmConfiguration.uiConfig</code>).
+        It lets a firm switch front-end behaviour on and off &mdash; page titles, widget visibility, default date ranges &mdash;
+        without a back-end change or a code deployment. The front-end team owns its shape; it is typed as
+        <code>IUiConfiguration</code>.
+      </p>
+
+      <h3>How your JSON is applied</h3>
+      <p>
+        On load the app deep-merges your JSON <em>over</em> a complete set of defaults:
+        <code>merge({}, DEFAULT_UI_CONFIGURATION, uiConfig)</code>. Three consequences matter:
+      </p>
+      <ul>
+        <li><strong>Omitting a key is safe.</strong> Anything you leave out keeps its default value, so a partial configuration is perfectly valid.</li>
+        <li><strong>A key in the wrong place is silently ignored.</strong> The merge happily adds it to the merged object, but no component ever reads that path &mdash; so nothing happens and there is no error anywhere. This is the single most common support issue, and the main thing this page checks.</li>
+        <li><strong>Arrays merge by index, not by replacement.</strong> See the warning below.</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Arrays are merged element by element</strong>
+        <p>
+          <code>merge</code> combines arrays position by position. If the default <code>navigationWidget.cards</code> has
+          6 entries and you supply 2, you end up with 6 cards: yours in positions 1&ndash;2 and the untouched defaults in
+          positions 3&ndash;6. To remove a card, supply the full array and set <code>"visibility": false</code> on the
+          entries you do not want &mdash; do not shorten the array.
+        </p>
+      </div>
+
+      <div class="callout info">
+        <strong>Never rely on a key being absent</strong>
+        <p>
+          Every boolean is explicit. Set <code>true</code> or <code>false</code>; absence means &ldquo;use the default&rdquo;,
+          which is not the same as <code>false</code>. Names are always positive (<code>showX</code>, never <code>hideX</code>)
+          except where noted.
+        </p>
+      </div>
+
+      <h2>What &ldquo;Verify&rdquo; checks</h2>
+      <ul>
+        <li><strong>JSON syntax</strong> &mdash; with the line and column of the first parse failure.</li>
+        <li><strong>Duplicate keys</strong> &mdash; legal JSON, but the last one silently wins.</li>
+        <li><strong>Unknown fields</strong> &mdash; keys no component reads, with a close-match suggestion when it looks like a typo.</li>
+        <li><strong>Misplaced fields</strong> &mdash; a real field sitting at the wrong path, reported with the exact path the app reads instead. <em>Fix placement</em> relocates the unambiguous ones for you.</li>
+        <li><strong>Types and allowed values</strong> &mdash; booleans that arrived as <code>"true"</code> strings, enums outside the supported set, objects where an array belongs.</li>
+        <li><strong>Field-specific rules</strong> &mdash; bilingual labels missing <code>fr</code>, more than six visible navigation cards, short <code>cards</code> arrays, unsupported icon keys, suspicious links.</li>
+        <li><strong>Defaults in effect</strong> &mdash; every key you omitted and the value it falls back to (enable <em>Notes</em> in the result filters).</li>
+      </ul>
+
+      <div class="callout info">
+        <strong>Annotation keys are recognised, not flagged</strong>
+        <p>
+          JSON has no comment syntax, so notes are conventionally written as keys:
+          <code>"Note"</code>, <code>"Note2"</code>, <code>"showApiTagVersion-WARNING"</code>, or any key
+          ending in <code>-WARNING</code>, <code>-NOTE</code>, <code>-TODO</code> or <code>-COMMENT</code>,
+          and any key starting with <code>_</code>. These are reported as notes rather than errors: the app
+          ignores them, which is exactly what they are for. Keep them.
+        </p>
+      </div>
+
+      <p>
+        A finding that repeats across array entries &mdash; the same missing key in every navigation card, say &mdash;
+        is collapsed into one row with a <code>&times;N</code> count, while the annotated view still highlights
+        every individual line.
+      </p>
+
+      <h2>Field reference</h2>
+      <div class="search-row" style="margin:12px 0">
+        <input type="search" id="doc-search" placeholder="Filter fields, e.g. pageTitle or reports" aria-label="Filter fields" />
+        <button id="doc-expand">Expand all</button>
+        <button id="doc-collapse">Collapse all</button>
+        <span id="doc-count" style="color:var(--text-faint);font-size:12.5px"></span>
+      </div>
+      <div id="doc-tree"></div>
+
+      <h2>Examples</h2>
+      <h3>Minimal &mdash; rename two pages and turn one widget on</h3>
+      <p>Everything else falls back to the defaults.</p>
+      <pre class="sample" id="sample-min"></pre>
+      <button id="btn-load-min">Load this into the validator</button>
+
+      <h3>Complete default configuration</h3>
+      <p>
+        The full <code>DEFAULT_UI_CONFIGURATION</code>, which is also the canonical key order used by the annotated view.
+        Use it as a starting point when you want to see every available key at once.
+      </p>
+      <pre class="sample" id="sample-full"></pre>
+      <button id="btn-load-full">Load this into the validator</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="brand-mark">d1g1t inc</span>
+  <span>UI Configuration Validator &mdash; runs entirely in your browser. Nothing you paste leaves this page.</span>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================================
+   * 1. Source of truth: enum values mirrored from the application code
+   * ===================================================================== */
+
+  var DATE_RANGE_VALUES = [
+    'today', 'day', 'two_days', 'week', 'last_month', 'month', 'last_quarter', 'quarter',
+    'last_6_months', '6_months', 'ytd', 'mtd', 'qtd', 'last_year', 'year', '2_years',
+    'last_3_years', '3_years', '5_years', '10_years', '15_years', '20_years', 'custom',
+    'since_inception', 'since_activation', 'since_discretionary', 'last_monthly',
+    'last_quarterly', 'last_annually'
+  ];
+
+  var NAV_ICONS = ['investments', 'activity', 'documents', 'income', 'settings', 'deposits', 'link'];
+
+  var INVESTOR_CALC_CODES = ['trend_aum', 'trend_cumul_ret'];
+
+  /* =====================================================================
+   * 2. DEFAULT_UI_CONFIGURATION, verbatim
+   * ===================================================================== */
+
+  var DEFAULTS = {
+    investor: {
+      home: {
+        pageTitle: { en: 'Home', fr: 'Accueil' },
+        defaultPageLevelDateRange: 'year',
+        advisoryTeamTitle: { en: 'Your Advisory Team', fr: 'Votre \u00e9quipe de conseillers' },
+        navigationWidget: {
+          visibility: true,
+          cards: [
+            {
+              title: { en: 'Investments', fr: 'Portefeuille' },
+              subtitle: {
+                en: 'Analyze your holdings, allocation and performance over time.',
+                fr: 'Analysez vos positions, votre r\u00e9partition et  votre rendement \u00e0 travers le temps.'
+              },
+              link: '/portfolio', icon: 'investments', visibility: true, filterByType: []
+            },
+            {
+              title: { en: 'Activity', fr: 'Activit\u00e9' },
+              subtitle: {
+                en: 'Access transactions such as buys and sells, income, transfers, and fees.',
+                fr: 'Acc\u00e9dez \u00e0 vos transactions telles que les achats, les ventes, les revenus, les transferts ou les frais.'
+              },
+              link: '/activity', icon: 'activity', visibility: true, filterByType: []
+            },
+            {
+              title: { en: 'Documents', fr: 'Documents' },
+              subtitle: {
+                en: 'Retrieve the documents shared by your advisor and upload new documents.',
+                fr: 'R\u00e9cup\u00e9rez les documents partag\u00e9s par votre conseiller et t\u00e9l\u00e9versez de nouveaux documents.'
+              },
+              link: '/dms', icon: 'documents', visibility: true, filterByType: []
+            },
+            {
+              title: { en: 'Settings', fr: 'R\u00e9glages' },
+              subtitle: {
+                en: 'View your profile and contact information, and update your preferences.',
+                fr: 'Consultez votre profil et vos coordonn\u00e9es, et mettez \u00e0 jour vos pr\u00e9f\u00e9rences.'
+              },
+              link: '/settings', icon: 'settings', visibility: true, filterByType: []
+            },
+            {
+              title: { en: 'Deposits and Withdrawals', fr: 'D\u00e9p\u00f4ts et retraits' },
+              subtitle: {
+                en: 'Track the flow of money in and out of your accounts.',
+                fr: 'Suivez les flux de tr\u00e9sorerie entrant et sortant de vos comptes.'
+              },
+              link: '/activity', icon: 'deposits', visibility: true, filterByType: []
+            },
+            {
+              title: { en: 'Income Generated', fr: 'Revenus g\u00e9n\u00e9r\u00e9s' },
+              subtitle: {
+                en: 'Track the dividends, interests and other income generated by your investments.',
+                fr: 'Suivez les dividendes, int\u00e9r\u00eats et autres revenus g\u00e9n\u00e9r\u00e9s par vos placements.'
+              },
+              link: 'https://www.google.com/', icon: 'income', visibility: true, filterByType: []
+            }
+          ]
+        },
+        contentSharing: {
+          visibility: false,
+          cardTitle: { en: 'News and Tips', fr: 'Nouvelles et conseils' }
+        }
+      },
+      investments: {
+        pageTitle: { en: 'Investments', fr: 'Portefeuille' },
+        defaultPageLevelDateRange: 'year'
+      },
+      activity: {
+        pageTitle: { en: 'Activity', fr: 'Activit\u00e9' },
+        defaultPageLevelDateRange: 'year'
+      },
+      documents: {
+        pageTitle: { en: 'Documents', fr: 'Documents' },
+        defaultPageLevelDateRange: '6_months'
+      },
+      settings: { pageTitle: { en: 'Settings', fr: 'R\u00e9glages' } },
+      privacyDeclaration: { pageTitle: { en: 'Privacy', fr: 'Confidentialit\u00e9' } },
+      hideEntityChipAccountFirmProvidedKey: false,
+      showMarketValueAndNetDeposits: false,
+      showTotalReturnWithBenchmark: false,
+      calculationCode: 'trend_cumul_ret'
+    },
+    advisor: {
+      client: {
+        monitor: {
+          overview: {
+            showPortfolioActivityWidgets: false,
+            showPortfolioTransactionsWidget: true
+          }
+        }
+      },
+      monitor: {
+        overview: { showPortfolioActivityWidgets: false },
+        activity: { showPortfolioTransactionsWidget: true }
+      },
+      emailAssistant: {
+        actions: [],
+        tones: [],
+        globalPrompts: {
+          systemPrompt: 'You are a professional financial advisor assistant generating personalized client emails.',
+          contextPrompt: 'Generate emails that are compliant, professional, and appropriate for the client relationship.',
+          safetyPrompt: 'Ensure no sensitive information is included and all advice is general in nature.'
+        },
+        fallbackTemplates: {
+          default: {
+            subject: 'Important Update',
+            body: 'Dear {clientName},\n\nI wanted to reach out with an important update.\n\nBest regards,\n{firmName}'
+          }
+        }
+      },
+      reportsVersion: 'v2',
+      showApiTagVersion: false,
+      showPageRecommendations: true,
+      securityProfile: { showNotesAndEvents: false }
+    }
+  };
+
+  /* =====================================================================
+   * 3. Schema
+   * ===================================================================== */
+
+  function obj(desc, fields, extra) { return assign({ kind: 'object', desc: desc, fields: fields }, extra); }
+  function bool(desc, extra) { return assign({ kind: 'boolean', desc: desc }, extra); }
+  function str(desc, extra) { return assign({ kind: 'string', desc: desc }, extra); }
+  function enm(desc, values, extra) { return assign({ kind: 'enum', desc: desc, values: values }, extra); }
+  function i18n(desc, extra) { return assign({ kind: 'i18n', desc: desc }, extra); }
+  function arr(desc, item, extra) { return assign({ kind: 'array', desc: desc, item: item }, extra); }
+  function rec(desc, value, extra) { return assign({ kind: 'record', desc: desc, value: value }, extra); }
+
+  function assign(target, extra) {
+    if (extra) { for (var k in extra) { if (Object.prototype.hasOwnProperty.call(extra, k)) target[k] = extra[k]; } }
+    return target;
+  }
+
+  var PAGE_TITLE_DESC = 'Replaces the default page title. Shown in the page header and, for Settings, in the top bar.';
+  var DATE_RANGE_DESC = 'The date range the page opens with, before the user picks another one.';
+
+  var navigationCard = obj('One card in the navigation widget. Cards render in array order; only the first six with "visibility": true are shown.', {
+    title: i18n('Card heading.'),
+    subtitle: i18n('Supporting line under the heading.'),
+    link: str('Where the card navigates. Use an in-app path such as "/portfolio", or a full external URL.', {
+      notes: ['In-app paths currently in use: /portfolio, /activity, /dms, /settings.']
+    }),
+    icon: enm('Icon shown on the card.', NAV_ICONS, {
+      notes: ['An unrecognised key does not fail: the app silently falls back to the "link" icon.']
+    }),
+    visibility: bool('Whether this card is rendered.', {
+      notes: ['This is how you remove a card. Never shorten the array \u2014 index-based merging would bring the default card back.']
+    }),
+    filterByType: arr('Transaction type codes pushed into the "Activity" page filter when the card is followed.', str('A transaction type code.'), {
+      optional: true,
+      notes: ['Only meaningful for cards pointing at /activity. Use [] for every other card.']
+    })
+  });
+
+  var emailAction = obj('One email action offered by the AI email assistant.', {
+    id: str('Stable identifier for the action.'),
+    name: str('Label shown in the action list.'),
+    description: str('Short explanation shown under the label.'),
+    agentId: str('Identifier of the agent that fulfils this action.'),
+    promptTemplate: str('Prompt template used to generate the email.'),
+    enabled: bool('Whether the action is offered.'),
+    category: str('Optional grouping label.', { optional: true }),
+    icon: str('Optional icon key.', { optional: true })
+  });
+
+  var emailTone = obj('One tone option offered by the AI email assistant.', {
+    id: str('Stable identifier for the tone.'),
+    name: str('Label shown in the tone picker.'),
+    description: str('Short explanation shown under the label.'),
+    enabled: bool('Whether the tone is offered.')
+  });
+
+  var SCHEMA = obj('The firm UI configuration object. Exactly two top-level keys: investor and advisor.', {
+    investor: obj('Everything the investor portal reads. Page-specific options are nested under the page key; options that affect more than one page sit directly on "investor".', {
+      home: obj('The investor "Home" page.', {
+        pageTitle: i18n(PAGE_TITLE_DESC),
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES),
+        advisoryTeamTitle: i18n('Replaces the default heading of the "Advisory Team" section.'),
+        navigationWidget: obj('The "What can we help you with today" widget. When visible it takes the place of the line graph on Home.', {
+          visibility: bool('Whether the widget replaces the Home line graph.'),
+          cards: arr('The navigation cards, in render order.', navigationCard, {
+            notes: [
+              'At most six visible cards are rendered; extra visible entries are dropped.',
+              'Because the merge is index-based, always send all six entries, even when hiding some.'
+            ]
+          })
+        }),
+        contentSharing: obj('The content-sharing ("News and Tips") card on Home.', {
+          visibility: bool('Whether the card is rendered.'),
+          cardTitle: i18n('Heading of the card.')
+        })
+      }),
+      investments: obj('The investor "Investments" page.', {
+        pageTitle: i18n(PAGE_TITLE_DESC),
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+      }),
+      activity: obj('The investor "Activity" page.', {
+        pageTitle: i18n(PAGE_TITLE_DESC),
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+      }),
+      documents: obj('The investor "Documents" page.', {
+        pageTitle: i18n(PAGE_TITLE_DESC),
+        defaultPageLevelDateRange: enm(DATE_RANGE_DESC, DATE_RANGE_VALUES)
+      }),
+      settings: obj('The investor "Settings" page. Title only \u2014 this page has no page-level date range.', {
+        pageTitle: i18n(PAGE_TITLE_DESC)
+      }),
+      privacyDeclaration: obj('The investor "Privacy" page. Title only \u2014 this page has no page-level date range.', {
+        pageTitle: i18n(PAGE_TITLE_DESC)
+      }),
+      hideEntityChipAccountFirmProvidedKey: bool('Removes the firm-provided key of an account from the entity chip dropdown labels.', {
+        notes: ['One of the few negatively named options, kept for backwards compatibility.']
+      }),
+      showMarketValueAndNetDeposits: bool('Draws two lines on the Home and Investments line graph: market value, and market value including net deposits.', {
+        notes: ['Affects more than one page, which is why it sits on "investor" rather than under a page.']
+      }),
+      showTotalReturnWithBenchmark: bool('Adds the benchmark line to the Investments line graph.'),
+      calculationCode: enm('Preferred calculation for the Trend Analysis chart.', INVESTOR_CALC_CODES, {
+        optional: true,
+        notes: [
+          '"trend_aum" is Market Value, "trend_cumul_ret" is Total Return.',
+          'Other calculation codes exist in the API, but the investor Trend Analysis chart only offers these two.'
+        ]
+      })
+    }),
+    advisor: obj('Everything the advisor platform reads.', {
+      client: obj('Options scoped to a single client, i.e. the "Manage Client" area.', {
+        monitor: obj('The "Manage Client" monitoring tabs.', {
+          overview: obj('The "Overview" tab of "Manage Client".', {
+            showPortfolioActivityWidgets: bool('Moves the Net Asset Value History, Inflows/Outflows, Investment Flows and Transactions widgets onto the Overview tab. They live on the Activity tab otherwise.'),
+            showPortfolioTransactionsWidget: bool('Shows the Transactions widget.')
+          })
+        })
+      }),
+      monitor: obj('Options for the firm-wide "Monitor Business" area.', {
+        overview: obj('The "Overview" tab of "Monitor Business".', {
+          showPortfolioActivityWidgets: bool('Moves the Net Asset Value History, Inflows/Outflows, Investment Flows and Transactions widgets onto the Monitor Business page. They live on the Activity tab otherwise.')
+        }),
+        activity: obj('The "Activity" tab of "Monitor Business".', {
+          showPortfolioTransactionsWidget: bool('Shows the Transactions widget on the Activity tab.')
+        })
+      }),
+      emailAssistant: obj('The AI email assistant: which email types, tones and prompts a firm offers, without a deployment.', {
+        actions: arr('Email actions offered to advisors.', emailAction),
+        tones: arr('Tone options offered to advisors.', emailTone),
+        globalPrompts: obj('Prompts applied to every generated email.', {
+          systemPrompt: str('Role and behaviour given to the model.'),
+          contextPrompt: str('Context and compliance framing for every email.'),
+          safetyPrompt: str('Safety constraints applied to every email.')
+        }, { optional: true }),
+        fallbackTemplates: rec('Templates used when generation fails, keyed by action id. The "default" key is the general fallback.',
+          obj('One fallback template.', {
+            subject: str('Subject line.'),
+            body: str('Body text. {clientName} and {firmName} are substituted at send time.')
+          }),
+          { optional: true })
+      }),
+      reportsVersion: enm('Which Reports page the firm gets.', ['v1', 'v2'], {
+        notes: ['"v1" is the legacy Reports page, "v2" the current one.']
+      }),
+      showApiTagVersion: bool('Shows the environment API version next to the top-right user initials.'),
+      showPageRecommendations: bool('Enables the page recommendations feature for the firm.'),
+      securityProfile: obj('The Security Profile page.', {
+        showNotesAndEvents: bool('Shows the Notes & Events sections on the Security Profile page \u2014 quick access menu, view mode, edit mode, and the securities table three-dot menu.')
+      })
+    })
+  });
+
+  /* =====================================================================
+   * 4. Schema helpers
+   * ===================================================================== */
+
+  var NAME_INDEX = Object.create(null);   // field name -> [canonical path, ...]
+  var PATH_INDEX = Object.create(null);   // canonical path -> node
+
+  (function buildIndex(node, path) {
+    PATH_INDEX[path] = node;
+    if (node.kind === 'object') {
+      for (var key in node.fields) {
+        if (!Object.prototype.hasOwnProperty.call(node.fields, key)) continue;
+        var child = node.fields[key];
+        var childPath = path ? path + '.' + key : key;
+        (NAME_INDEX[key] = NAME_INDEX[key] || []).push(childPath);
+        buildIndex(child, childPath);
+      }
+    } else if (node.kind === 'array') {
+      buildIndex(node.item, path + '[]');
+    } else if (node.kind === 'record') {
+      buildIndex(node.value, path + '.*');
+    } else if (node.kind === 'i18n') {
+      PATH_INDEX[path + '.en'] = str('English text.');
+      PATH_INDEX[path + '.fr'] = str('French text.');
+    }
+  })(SCHEMA, '');
+
+  function normalisePath(path) { return path.replace(/\[\d+\]/g, '[]'); }
+
+  function typeLabel(node) {
+    switch (node.kind) {
+      case 'object': return 'object';
+      case 'boolean': return 'boolean';
+      case 'string': return 'string';
+      case 'enum': return node.values.length <= 3 ? node.values.map(quote).join(' | ') : 'enum';
+      case 'i18n': return '{ en, fr }';
+      case 'array': return 'array';
+      case 'record': return 'map';
+      default: return 'unknown';
+    }
+  }
+
+  function quote(value) { return '"' + value + '"'; }
+
+  function getByPath(root, path) {
+    if (!path) return root;
+    var parts = path.split('.');
+    var cursor = root;
+    for (var i = 0; i < parts.length; i++) {
+      if (cursor === null || typeof cursor !== 'object') return undefined;
+      cursor = cursor[parts[i]];
+    }
+    return cursor;
+  }
+
+  /* =====================================================================
+   * 5. Validation
+   * ===================================================================== */
+
+  function validate(data) {
+    var issues = [];
+    function add(severity, path, title, message, hint) {
+      issues.push({ severity: severity, path: path, title: title, message: message || '', hint: hint || '' });
+    }
+
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+      add('error', '', 'Root must be an object',
+        'The configuration must be a JSON object with "investor" and/or "advisor" keys, not ' +
+        (Array.isArray(data) ? 'an array' : describeType(data)) + '.');
+      return issues;
+    }
+
+    walk(data, SCHEMA, '', add);
+    return issues;
+  }
+
+  function describeType(value) {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'an array';
+    switch (typeof value) {
+      case 'string': return 'a string';
+      case 'number': return 'a number';
+      case 'boolean': return 'a boolean';
+      case 'object': return 'an object';
+      default: return typeof value;
+    }
+  }
+
+  function walk(value, node, path, add) {
+    switch (node.kind) {
+      case 'object': return walkObject(value, node, path, add);
+      case 'i18n': return walkI18n(value, node, path, add);
+      case 'array': return walkArray(value, node, path, add);
+      case 'record': return walkRecord(value, node, path, add);
+      case 'boolean': return walkBoolean(value, path, add);
+      case 'string': return walkString(value, path, add);
+      case 'enum': return walkEnum(value, node, path, add);
+    }
+  }
+
+  function walkObject(value, node, path, add) {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      add('error', path, 'Wrong type', 'Expected an object, found ' + describeType(value) + '.');
+      return;
+    }
+
+    for (var key in value) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+      var childPath = path ? path + '.' + key : key;
+      if (Object.prototype.hasOwnProperty.call(node.fields, key)) {
+        walk(value[key], node.fields[key], childPath, add);
+      } else {
+        reportUnknownKey(key, childPath, path, node, value[key], add);
+      }
+    }
+
+    for (var field in node.fields) {
+      if (!Object.prototype.hasOwnProperty.call(node.fields, field)) continue;
+      if (Object.prototype.hasOwnProperty.call(value, field)) continue;
+      var fieldPath = path ? path + '.' + field : field;
+      var fallback = getByPath(DEFAULTS, fieldPath);
+      add('info', path, 'Not set: ' + field,
+        'No value provided, so the default applies.',
+        fallback === undefined ? '' : '<code>' + escapeHtml(preview(fallback)) + '</code>');
+    }
+
+    if (node.check) node.check(value, path, add);
+  }
+
+  /* Keys the team adds on purpose: JSON has no comment syntax, so notes live in keys. */
+  var ANNOTATION_SUFFIX = /[-_](warning|warn|note|notes|todo|comment|info|readme|doc|docs)$/i;
+  var ANNOTATION_NAME = /^(note|notes|comment|comments|readme|warning|warnings|todo)\d*$/i;
+  var ANNOTATION_PREFIX = /^(_|\/\/|#)/;
+
+  function annotationTarget(key) {
+    var match = ANNOTATION_SUFFIX.exec(key);
+    return match ? key.slice(0, match.index) : null;
+  }
+
+  function isAnnotationKey(key) {
+    return ANNOTATION_SUFFIX.test(key) || ANNOTATION_NAME.test(key) || ANNOTATION_PREFIX.test(key);
+  }
+
+  function reportUnknownKey(key, childPath, parentPath, parentNode, value, add) {
+    if (isAnnotationKey(key)) {
+      var target = annotationTarget(key);
+      var documented = target && (Object.prototype.hasOwnProperty.call(parentNode.fields, target) || NAME_INDEX[target]);
+      add('info', childPath, 'Annotation',
+        documented
+          ? 'A note about <code>' + escapeHtml(target) + '</code>, not a setting.'
+          : 'A free-form note, not a setting.',
+        'Harmless — JSON has no comment syntax, so notes live in keys. The app ignores it and always will.');
+      return;
+    }
+
+    var canonical = NAME_INDEX[key] || [];
+    var elsewhere = [];
+    for (var i = 0; i < canonical.length; i++) {
+      if (normalisePath(canonical[i]) !== normalisePath(childPath)) elsewhere.push(canonical[i]);
+    }
+
+    if (elsewhere.length) {
+      var ranked = rankByProximity(elsewhere, childPath);
+      var target = ranked[0];
+      add('error', childPath, 'Misplaced field',
+        '<code>' + escapeHtml(key) + '</code> is a real configuration field, but nothing reads it at ' +
+        '<code>' + escapeHtml(childPath) + '</code>. It has no effect here.',
+        'Move it to ' + (ranked.length === 1
+          ? '<code>' + escapeHtml(target) + '</code>.'
+          : 'one of: ' + ranked.map(function (p) { return '<code>' + escapeHtml(p) + '</code>'; }).join(', ') + '.'));
+      return;
+    }
+
+    var siblings = Object.keys(parentNode.fields);
+    var near = closestMatch(key, siblings) || closestMatch(key, Object.keys(NAME_INDEX));
+    add('error', childPath, 'Unknown field',
+      '<code>' + escapeHtml(key) + '</code> is not part of the configuration schema and is ignored by the app.',
+      near
+        ? 'Did you mean <code>' + escapeHtml(near) + '</code>?'
+        : 'Valid keys here: ' + siblings.map(function (s) { return '<code>' + escapeHtml(s) + '</code>'; }).join(', ') + '.');
+  }
+
+  function rankByProximity(paths, wrongPath) {
+    var wrongParts = wrongPath.split('.');
+    return paths.slice().sort(function (a, b) {
+      return sharedPrefix(b.split('.'), wrongParts) - sharedPrefix(a.split('.'), wrongParts);
+    });
+  }
+
+  function sharedPrefix(a, b) {
+    var count = 0;
+    while (count < a.length && count < b.length && a[count] === b[count]) count++;
+    return count;
+  }
+
+  function walkI18n(value, node, path, add) {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      add('error', path, 'Wrong type',
+        'Expected a bilingual object such as <code>{ "en": "Home", "fr": "Accueil" }</code>, found ' + describeType(value) + '.');
+      return;
+    }
+
+    ['en', 'fr'].forEach(function (lang) {
+      if (!Object.prototype.hasOwnProperty.call(value, lang)) {
+        add('warning', path, 'Missing "' + lang + '"',
+          'Users on the ' + (lang === 'en' ? 'English' : 'French') + ' locale fall back to the default label for this field.',
+          'Always provide both <code>en</code> and <code>fr</code>.');
+      } else if (typeof value[lang] !== 'string') {
+        add('error', path + '.' + lang, 'Wrong type', 'Expected a string, found ' + describeType(value[lang]) + '.');
+      } else if (!value[lang].trim()) {
+        add('warning', path + '.' + lang, 'Empty label', 'An empty string renders as a blank label.');
+      }
+    });
+
+    for (var key in value) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+      if (key === 'en' || key === 'fr') continue;
+      add('error', path + '.' + key, 'Unsupported locale',
+        '<code>' + escapeHtml(key) + '</code> is not a supported locale key.',
+        'Only <code>en</code> and <code>fr</code> are read.');
+    }
+  }
+
+  function walkArray(value, node, path, add) {
+    if (!Array.isArray(value)) {
+      add('error', path, 'Wrong type', 'Expected an array, found ' + describeType(value) + '.');
+      return;
+    }
+    for (var i = 0; i < value.length; i++) walk(value[i], node.item, path + '[' + i + ']', add);
+    if (node.check) node.check(value, path, add);
+  }
+
+  function walkRecord(value, node, path, add) {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      add('error', path, 'Wrong type', 'Expected an object keyed by name, found ' + describeType(value) + '.');
+      return;
+    }
+    for (var key in value) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+      walk(value[key], node.value, path + '.' + key, add);
+    }
+  }
+
+  function walkBoolean(value, path, add) {
+    if (typeof value === 'boolean') return;
+    if (value === 'true' || value === 'false') {
+      add('error', path, 'Quoted boolean',
+        'Found the string <code>"' + value + '"</code>. A quoted boolean is truthy in JavaScript, so ' +
+        (value === 'false' ? '<code>"false"</code> switches the feature <strong>on</strong>.' : 'the value is misleading.'),
+        'Write <code>' + value + '</code> without quotes.');
+      return;
+    }
+    if (value === 0 || value === 1) {
+      add('error', path, 'Numeric boolean',
+        'Found <code>' + value + '</code>. Comparisons against <code>true</code>/<code>false</code> will not behave as expected.',
+        'Write <code>' + (value === 1 ? 'true' : 'false') + '</code>.');
+      return;
+    }
+    add('error', path, 'Wrong type', 'Expected <code>true</code> or <code>false</code>, found ' + describeType(value) + '.');
+  }
+
+  function walkString(value, path, add) {
+    if (typeof value !== 'string') {
+      add('error', path, 'Wrong type', 'Expected a string, found ' + describeType(value) + '.');
+    }
+  }
+
+  function walkEnum(value, node, path, add) {
+    if (typeof value !== 'string') {
+      add('error', path, 'Wrong type', 'Expected one of the supported string values, found ' + describeType(value) + '.',
+        'Supported: ' + node.values.map(function (v) { return '<code>' + escapeHtml(v) + '</code>'; }).join(', ') + '.');
+      return;
+    }
+    if (node.values.indexOf(value) !== -1) return;
+
+    var near = closestMatch(value, node.values);
+    add('error', path, 'Unsupported value',
+      '<code>' + escapeHtml(value) + '</code> is not a value this field accepts.',
+      (near ? 'Did you mean <code>' + escapeHtml(near) + '</code>? ' : '') +
+      'Supported: ' + node.values.map(function (v) { return '<code>' + escapeHtml(v) + '</code>'; }).join(', ') + '.');
+  }
+
+  /* ---- field-specific rules ---- */
+
+  SCHEMA.fields.investor.fields.home.fields.navigationWidget.fields.cards.check = function (cards, path, add) {
+    var defaults = DEFAULTS.investor.home.navigationWidget.cards;
+    if (cards.length < defaults.length) {
+      add('warning', path, 'Shorter than the default array',
+        'You supplied ' + cards.length + ' card' + (cards.length === 1 ? '' : 's') + ' but the default has ' +
+        defaults.length + '. Arrays are merged by index, so the default cards at positions ' +
+        (cards.length + 1) + '\u2013' + defaults.length + ' survive and still render.',
+        'Send all ' + defaults.length + ' entries and set <code>"visibility": false</code> on the ones you want hidden.');
+    }
+
+    var visible = 0;
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i] && cards[i].visibility === true) visible++;
+    }
+    if (visible > 6) {
+      add('warning', path, 'More than six visible cards',
+        visible + ' cards have <code>"visibility": true</code>, but the widget renders at most six. ' +
+        'The extras are dropped in array order.',
+        'Hide ' + (visible - 6) + ' card' + (visible - 6 === 1 ? '' : 's') + ' to make the selection explicit.');
+    }
+    if (visible === 0 && cards.length) {
+      add('warning', path, 'No visible cards',
+        'Every card is hidden, so the widget renders empty.',
+        'Set <code>navigationWidget.visibility</code> to <code>false</code> to hide the widget instead.');
+    }
+  };
+
+  navigationCard.fields.link.check = function (value, path, add) {
+    if (typeof value !== 'string' || !value.trim()) return;
+    if (value.charAt(0) === '/') return;
+    if (/^https?:\/\//i.test(value)) {
+      add('info', path, 'External link',
+        'This card navigates away from the portal to <code>' + escapeHtml(value) + '</code>.');
+      return;
+    }
+    add('warning', path, 'Suspicious link',
+      '<code>' + escapeHtml(value) + '</code> is neither an in-app path nor an absolute URL.',
+      'Use a leading slash for in-app routes, e.g. <code>/portfolio</code>.');
+  };
+
+  navigationCard.check = function (card, path, add) {
+    if (!card || typeof card !== 'object') return;
+    if (card.link === '/activity') return;
+    if (Array.isArray(card.filterByType) && card.filterByType.length) {
+      add('warning', path + '.filterByType',
+        'Filter has no effect',
+        'Transaction type filters are only applied by the Activity page, but this card links to <code>' +
+        escapeHtml(String(card.link)) + '</code>.',
+        'Use <code>[]</code>, or point the card at <code>/activity</code>.');
+    }
+  };
+
+  SCHEMA.fields.investor.check = function (investor, path, add) {
+    if (investor.home && investor.home.navigationWidget &&
+        investor.home.navigationWidget.visibility === false &&
+        Array.isArray(investor.home.navigationWidget.cards) &&
+        investor.home.navigationWidget.cards.length) {
+      add('info', path + '.home.navigationWidget',
+        'Cards configured but widget hidden',
+        'The widget is hidden, so these cards never render. The Home line graph is shown instead.');
+    }
+  };
+
+  /* leaf nodes carry their own checks; object and array nodes run theirs inline */
+  var baseWalk = walk;
+  walk = function (value, node, path, add) {
+    baseWalk(value, node, path, add);
+    if (node.check && node.kind !== 'object' && node.kind !== 'array') node.check(value, path, add);
+  };
+
+  /* =====================================================================
+   * 6. Duplicate-key detection (JSON.parse keeps the last one silently)
+   * ===================================================================== */
+
+  function tokenize(text) {
+    var tokens = [];
+    var i = 0;
+    var line = 1;
+    while (i < text.length) {
+      var ch = text.charAt(i);
+      if (ch === '\n') { line++; i++; continue; }
+      if (ch === ' ' || ch === '\t' || ch === '\r') { i++; continue; }
+      if ('{}[]:,'.indexOf(ch) !== -1) { tokens.push({ t: ch, line: line }); i++; continue; }
+      if (ch === '"') {
+        var j = i + 1;
+        while (j < text.length) {
+          if (text.charAt(j) === '\\') { j += 2; continue; }
+          if (text.charAt(j) === '"') break;
+          j++;
+        }
+        var raw = text.slice(i, j + 1);
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch (e) { parsed = raw; }
+        tokens.push({ t: 'str', v: parsed, line: line });
+        i = j + 1;
+        continue;
+      }
+      var k = i;
+      while (k < text.length && ' \t\r\n{}[]:,'.indexOf(text.charAt(k)) === -1) k++;
+      tokens.push({ t: 'lit', v: text.slice(i, k), line: line });
+      i = k;
+    }
+    return tokens;
+  }
+
+  function findDuplicateKeys(text) {
+    var tokens = tokenize(text);
+    var stack = [];
+    var pendingKey = null;
+    var found = [];
+
+    function valuePath() {
+      if (!stack.length) return '';
+      var top = stack[stack.length - 1];
+      if (top.kind === 'arr') return top.path + '[' + (top.index++) + ']';
+      return top.path ? top.path + '.' + pendingKey : pendingKey;
+    }
+
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+      var next = tokens[i + 1];
+      var top = stack.length ? stack[stack.length - 1] : null;
+
+      if (token.t === 'str' && top && top.kind === 'obj' && next && next.t === ':') {
+        if (top.keys[token.v] !== undefined) {
+          found.push({
+            key: token.v,
+            path: top.path ? top.path + '.' + token.v : token.v,
+            firstLine: top.keys[token.v],
+            line: token.line
+          });
+        } else {
+          top.keys[token.v] = token.line;
+        }
+        pendingKey = token.v;
+        continue;
+      }
+
+      if (token.t === '{' || token.t === '[') {
+        stack.push({ kind: token.t === '{' ? 'obj' : 'arr', keys: Object.create(null), path: valuePath(), index: 0 });
+        continue;
+      }
+      if (token.t === '}' || token.t === ']') { stack.pop(); continue; }
+      if ((token.t === 'str' || token.t === 'lit') && top && top.kind === 'arr') { valuePath(); continue; }
+    }
+
+    return found;
+  }
+
+  /* =====================================================================
+   * 7. Canonical serialisation + path -> line map
+   * ===================================================================== */
+
+  function canonicalOrder(value, node) {
+    if (!node || value === null || typeof value !== 'object') return value;
+
+    if (node.kind === 'array' && Array.isArray(value)) {
+      return value.map(function (item) { return canonicalOrder(item, node.item); });
+    }
+    if (node.kind === 'record' && !Array.isArray(value)) {
+      var record = {};
+      Object.keys(value).forEach(function (key) { record[key] = canonicalOrder(value[key], node.value); });
+      return record;
+    }
+    if (node.kind === 'i18n' && !Array.isArray(value)) {
+      var locales = {};
+      ['en', 'fr'].forEach(function (lang) {
+        if (Object.prototype.hasOwnProperty.call(value, lang)) locales[lang] = value[lang];
+      });
+      Object.keys(value).forEach(function (key) {
+        if (!Object.prototype.hasOwnProperty.call(locales, key)) locales[key] = value[key];
+      });
+      return locales;
+    }
+    if (node.kind === 'object' && !Array.isArray(value)) {
+      var ordered = {};
+      Object.keys(node.fields).forEach(function (key) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) ordered[key] = canonicalOrder(value[key], node.fields[key]);
+      });
+      Object.keys(value).forEach(function (key) {
+        if (!Object.prototype.hasOwnProperty.call(ordered, key)) ordered[key] = value[key];
+      });
+      return ordered;
+    }
+    return value;
+  }
+
+  function serialize(value) {
+    var lines = [];
+    var map = {};
+
+    function emit(current, path, depth, prefix, comma) {
+      var pad = repeat('  ', depth);
+      var start = lines.length;
+
+      if (Array.isArray(current)) {
+        if (!current.length) {
+          lines.push(pad + prefix + '[]' + (comma ? ',' : ''));
+        } else {
+          lines.push(pad + prefix + '[');
+          for (var i = 0; i < current.length; i++) {
+            emit(current[i], path + '[' + i + ']', depth + 1, '', i < current.length - 1);
+          }
+          lines.push(pad + ']' + (comma ? ',' : ''));
+        }
+      } else if (current !== null && typeof current === 'object') {
+        var keys = Object.keys(current);
+        if (!keys.length) {
+          lines.push(pad + prefix + '{}' + (comma ? ',' : ''));
+        } else {
+          lines.push(pad + prefix + '{');
+          for (var k = 0; k < keys.length; k++) {
+            var key = keys[k];
+            emit(current[key], path ? path + '.' + key : key, depth + 1,
+              JSON.stringify(key) + ': ', k < keys.length - 1);
+          }
+          lines.push(pad + '}' + (comma ? ',' : ''));
+        }
+      } else {
+        lines.push(pad + prefix + JSON.stringify(current) + (comma ? ',' : ''));
+      }
+
+      map[path] = { start: start, end: lines.length - 1 };
+    }
+
+    emit(value, '', 0, '', false);
+    return { lines: lines, map: map };
+  }
+
+  function repeat(text, times) {
+    var out = '';
+    for (var i = 0; i < times; i++) out += text;
+    return out;
+  }
+
+  /* =====================================================================
+   * 8. Placement auto-fix
+   * ===================================================================== */
+
+  function applyPlacementFixes(data, issues) {
+    var moved = [];
+    var skipped = [];
+
+    issues.forEach(function (issue) {
+      if (issue.title !== 'Misplaced field') return;
+      var candidates = NAME_INDEX[lastSegment(issue.path)] || [];
+      var targets = candidates.filter(function (candidate) {
+        return normalisePath(candidate) !== normalisePath(issue.path) && candidate.indexOf('[]') === -1 && candidate.indexOf('.*') === -1;
+      });
+      if (targets.length !== 1) { skipped.push({ path: issue.path, reason: 'ambiguous' }); return; }
+
+      var target = targets[0];
+      if (getByPath(data, target) !== undefined) {
+        skipped.push({ path: issue.path, reason: 'occupied', target: target });
+        return;
+      }
+
+      var value = getByPath(data, issue.path);
+      if (value === undefined) return;
+      if (!deletePath(data, issue.path)) { skipped.push({ path: issue.path, reason: 'nested' }); return; }
+      setPath(data, target, value);
+      moved.push({ from: issue.path, to: target });
+    });
+
+    return { moved: moved, skipped: skipped };
+  }
+
+  function lastSegment(path) {
+    var parts = path.split('.');
+    return parts[parts.length - 1];
+  }
+
+  function deletePath(root, path) {
+    var parts = path.split('.');
+    var cursor = root;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (!cursor || typeof cursor !== 'object') return false;
+      cursor = cursor[parts[i]];
+    }
+    if (!cursor || typeof cursor !== 'object') return false;
+    delete cursor[parts[parts.length - 1]];
+    return true;
+  }
+
+  function setPath(root, path, value) {
+    var parts = path.split('.');
+    var cursor = root;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (cursor[parts[i]] === null || typeof cursor[parts[i]] !== 'object' || Array.isArray(cursor[parts[i]])) {
+        cursor[parts[i]] = {};
+      }
+      cursor = cursor[parts[i]];
+    }
+    cursor[parts[parts.length - 1]] = value;
+  }
+
+  /* =====================================================================
+   * 9. Small utilities
+   * ===================================================================== */
+
+  function escapeHtml(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function preview(value) {
+    var text = JSON.stringify(value);
+    if (text === undefined) return 'undefined';
+    return text.length > 110 ? text.slice(0, 107) + '\u2026' : text;
+  }
+
+  function closestMatch(word, candidates) {
+    var best = null;
+    var bestScore = Infinity;
+    var lower = String(word).toLowerCase();
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = candidates[i];
+      var score = levenshtein(lower, candidate.toLowerCase());
+      if (score < bestScore) { bestScore = score; best = candidate; }
+    }
+    var threshold = Math.max(2, Math.floor(lower.length / 3));
+    return bestScore <= threshold ? best : null;
+  }
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    var previous = [];
+    for (var j = 0; j <= b.length; j++) previous[j] = j;
+    for (var i = 1; i <= a.length; i++) {
+      var current = [i];
+      for (var k = 1; k <= b.length; k++) {
+        current[k] = Math.min(
+          previous[k] + 1,
+          current[k - 1] + 1,
+          previous[k - 1] + (a.charAt(i - 1) === b.charAt(k - 1) ? 0 : 1)
+        );
+      }
+      previous = current;
+    }
+    return previous[b.length];
+  }
+
+  function positionToLineCol(text, position) {
+    var upTo = text.slice(0, position);
+    var lines = upTo.split('\n');
+    return { line: lines.length, column: lines[lines.length - 1].length + 1 };
+  }
+
+  function parseError(text, error) {
+    var message = String(error && error.message || error);
+    var match = /position\s+(\d+)/i.exec(message);
+    var lineMatch = /line\s+(\d+)\s+column\s+(\d+)/i.exec(message);
+    var where = null;
+    if (match) where = positionToLineCol(text, parseInt(match[1], 10));
+    else if (lineMatch) where = { line: parseInt(lineMatch[1], 10), column: parseInt(lineMatch[2], 10) };
+    return { message: message.replace(/^JSON\.parse:\s*/, ''), where: where };
+  }
+
+  function highlight(line) {
+    var escaped = escapeHtml(line);
+    return escaped.replace(
+      /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+      function (whole, string, colon, literal, number) {
+        if (string !== undefined) {
+          if (colon) return '<span class="tok-key">' + string + '</span><span class="tok-punc">' + colon + '</span>';
+          return '<span class="tok-str">' + string + '</span>';
+        }
+        if (literal !== undefined) return '<span class="tok-bool">' + literal + '</span>';
+        return '<span class="tok-num">' + number + '</span>';
+      }
+    );
+  }
+
+  /* =====================================================================
+   * 10. DOM wiring
+   * ===================================================================== */
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var input = $('input');
+  var gutter = $('gutter');
+  var issuesEl = $('issues');
+  var summaryEl = $('summary');
+  var annotatedEl = $('annotated');
+  var toastEl = $('toast');
+  var fixBtn = $('btn-fix');
+  var copyResultBtn = $('btn-copy-result');
+
+  var lastRun = null;
+
+  function toast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function () { toastEl.classList.remove('show'); }, 1900);
+  }
+
+  function syncGutter() {
+    var count = input.value.split('\n').length;
+    var numbers = [];
+    for (var i = 1; i <= count; i++) numbers.push(i);
+    gutter.textContent = numbers.join('\n');
+    gutter.scrollTop = input.scrollTop;
+    $('stat-lines').textContent = count + (count === 1 ? ' line' : ' lines');
+    $('stat-chars').textContent = input.value.length.toLocaleString() + ' characters';
+  }
+
+  input.addEventListener('input', function () { syncGutter(); setParseStatus('Not validated', ''); });
+  input.addEventListener('scroll', function () { gutter.scrollTop = input.scrollTop; });
+
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      var start = input.selectionStart;
+      var end = input.selectionEnd;
+      input.value = input.value.slice(0, start) + '  ' + input.value.slice(end);
+      input.selectionStart = input.selectionEnd = start + 2;
+      syncGutter();
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      event.preventDefault();
+      verify();
+    }
+  });
+
+  function setParseStatus(text, tone) {
+    var el = $('stat-parse');
+    el.textContent = text;
+    el.style.color = tone === 'error' ? 'var(--error)' : tone === 'ok' ? 'var(--ok)' : '';
+  }
+
+  /* ---- verify ---- */
+
+  function verify() {
+    var text = input.value.trim();
+    lastRun = null;
+    fixBtn.disabled = true;
+    copyResultBtn.disabled = true;
+
+    if (!text) {
+      summaryEl.innerHTML = '<span class="chip muted"><span class="dot"></span>Nothing to check</span>';
+      issuesEl.innerHTML = '<div class="empty"><strong>The editor is empty</strong>Paste a configuration first.</div>';
+      annotatedEl.innerHTML = '<div class="empty">Nothing to display.</div>';
+      setParseStatus('Empty', '');
+      return;
+    }
+
+    var data;
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      var info = parseError(text, error);
+      renderSyntaxError(text, info);
+      setParseStatus('Invalid JSON', 'error');
+      return;
+    }
+
+    setParseStatus('Valid JSON', 'ok');
+
+    var issues = validate(data);
+
+    findDuplicateKeys(text).forEach(function (duplicate) {
+      issues.push({
+        severity: 'error',
+        path: duplicate.path,
+        title: 'Duplicate key',
+        message: '<code>' + escapeHtml(duplicate.key) + '</code> is declared twice (source lines ' +
+          duplicate.firstLine + ' and ' + duplicate.line + '). JSON parsers keep the last one, so the earlier value is silently discarded.',
+        hint: 'Delete one of the two declarations.'
+      });
+    });
+
+    var ordered = canonicalOrder(data, SCHEMA);
+    var serialized = serialize(ordered);
+
+    lastRun = { data: data, ordered: ordered, issues: issues, serialized: serialized };
+    copyResultBtn.disabled = false;
+    fixBtn.disabled = !issues.some(function (issue) { return issue.title === 'Misplaced field'; });
+
+    renderSummary(issues);
+    renderIssues(issues, serialized.map);
+    renderAnnotated(serialized, issues);
+  }
+
+  function renderSyntaxError(text, info) {
+    summaryEl.innerHTML = '<span class="chip error"><span class="dot"></span>JSON could not be parsed</span>';
+
+    var location = info.where
+      ? 'Line ' + info.where.line + ', column ' + info.where.column
+      : 'Position unknown';
+
+    var excerpt = '';
+    if (info.where) {
+      var lines = text.split('\n');
+      var from = Math.max(0, info.where.line - 3);
+      var to = Math.min(lines.length, info.where.line + 2);
+      var rows = [];
+      for (var i = from; i < to; i++) {
+        var isBad = i === info.where.line - 1;
+        rows.push(
+          '<div class="row' + (isBad ? ' error' : '') + '"><div class="n">' + (i + 1) + '</div>' +
+          '<div class="c">' + highlight(lines[i]) + '</div></div>'
+        );
+        if (isBad) {
+          rows.push('<div class="note error"><div class="n"></div><div class="t" style="font-family:var(--mono);white-space:pre">' +
+            repeat(' ', Math.max(0, info.where.column - 1)) + '^ ' + escapeHtml(info.message) + '</div></div>');
+        }
+      }
+      excerpt = rows.join('');
+    }
+
+    issuesEl.innerHTML =
+      '<div class="issue error"><div class="issue-head">' +
+      '<span class="badge error">error</span><span class="path">Syntax error</span>' +
+      '<span class="lineno">' + escapeHtml(location) + '</span></div>' +
+      '<div class="msg">' + escapeHtml(info.message) + '</div>' +
+      '<div class="hint">Common causes: a trailing comma before <code>}</code> or <code>]</code>, a missing comma between entries, ' +
+      'single quotes instead of double quotes, or an unescaped newline inside a string. Press <em>Format</em> after fixing to re-indent.</div></div>';
+
+    annotatedEl.innerHTML = excerpt
+      ? excerpt
+      : '<div class="empty">Fix the syntax error to see the annotated view.</div>';
+  }
+
+  function renderSummary(issues) {
+    var counts = { error: 0, warning: 0, info: 0 };
+    groupIssues(issues).forEach(function (issue) { counts[issue.severity]++; });
+
+    var parts = [];
+    if (!counts.error && !counts.warning) {
+      parts.push('<span class="chip ok"><span class="dot"></span>Configuration is valid</span>');
+    }
+    if (counts.error) parts.push('<span class="chip error"><span class="dot"></span>' + counts.error + ' error' + (counts.error === 1 ? '' : 's') + '</span>');
+    if (counts.warning) parts.push('<span class="chip warning"><span class="dot"></span>' + counts.warning + ' warning' + (counts.warning === 1 ? '' : 's') + '</span>');
+    parts.push('<span class="chip info"><span class="dot"></span>' + counts.info + ' note' + (counts.info === 1 ? '' : 's') + '</span>');
+
+    summaryEl.innerHTML = parts.join('');
+  }
+
+  var SEVERITY_ORDER = { error: 0, warning: 1, info: 2 };
+
+  function visibleIssues(issues) {
+    return issues.filter(function (issue) { return $('f-' + issue.severity).checked; });
+  }
+
+  /**
+   * The same finding repeated across array entries is one problem, not N.
+   * Collapse by severity + title + index-agnostic path, keeping the first as the anchor.
+   */
+  function groupIssues(issues) {
+    var order = [];
+    var groups = Object.create(null);
+
+    issues.forEach(function (issue) {
+      var key = issue.severity + '|' + issue.title + '|' + normalisePath(issue.path);
+      if (!groups[key]) { groups[key] = []; order.push(key); }
+      groups[key].push(issue);
+    });
+
+    return order.map(function (key) {
+      var members = groups[key];
+      if (members.length === 1) return members[0];
+      var first = members[0];
+      return {
+        severity: first.severity,
+        path: normalisePath(first.path),
+        anchorPath: first.path,
+        title: first.title,
+        message: first.message,
+        hint: first.hint,
+        count: members.length,
+        occurrences: members.map(function (member) { return indexLabel(member.path); }).filter(Boolean)
+      };
+    });
+  }
+
+  function indexLabel(path) {
+    var matches = path.match(/\[\d+\]/g);
+    return matches ? matches[matches.length - 1] : '';
+  }
+
+  function renderIssues(issues, map) {
+    var shown = visibleIssues(groupIssues(issues)).slice().sort(function (a, b) {
+      var bySeverity = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+      return bySeverity !== 0 ? bySeverity : a.path.localeCompare(b.path);
+    });
+
+    if (!shown.length) {
+      issuesEl.innerHTML = issues.length
+        ? '<div class="empty"><strong>Nothing to show</strong>All findings are filtered out.</div>'
+        : '<div class="empty"><strong>No findings</strong>Every key is known, correctly placed and correctly typed.</div>';
+      return;
+    }
+
+    issuesEl.innerHTML = shown.map(function (issue) {
+      var anchorPath = issue.anchorPath || issue.path;
+      var anchor = map[anchorPath] || map[anchorPath.replace(/\.[^.]+$/, '')] || null;
+      var lineLabel = anchor ? 'line ' + (anchor.start + 1) : '';
+      var repeat = issue.count
+        ? '<span class="badge ' + issue.severity + '" title="Repeated across array entries">×' + issue.count + '</span>'
+        : '';
+      var occurrences = issue.count && issue.occurrences.length
+        ? '<div class="hint">Entries: ' + issue.occurrences.map(escapeHtml).join(' ') + '</div>'
+        : '';
+      return '<button class="issue ' + issue.severity + '" data-line="' + (anchor ? anchor.start + 1 : '') + '">' +
+        '<div class="issue-head">' +
+        '<span class="badge ' + issue.severity + '">' + issue.severity + '</span>' +
+        '<span class="path">' + escapeHtml(issue.path || '(root)') + '</span>' +
+        repeat +
+        '<span class="lineno">' + lineLabel + '</span>' +
+        '</div>' +
+        '<div class="msg"><strong>' + escapeHtml(issue.title) + '.</strong> ' + issue.message + '</div>' +
+        (issue.hint ? '<div class="hint">' + issue.hint + '</div>' : '') +
+        occurrences +
+        '</button>';
+    }).join('');
+
+    Array.prototype.forEach.call(issuesEl.querySelectorAll('.issue'), function (node) {
+      node.addEventListener('click', function () {
+        var line = node.getAttribute('data-line');
+        if (line) jumpToLine(parseInt(line, 10));
+      });
+    });
+  }
+
+  function renderAnnotated(serialized, issues) {
+    var byLine = {};
+    issues.forEach(function (issue) {
+      var anchor = serialized.map[issue.path] || serialized.map[issue.path.replace(/\.[^.]+$/, '')];
+      var line = anchor ? anchor.start : 0;
+      (byLine[line] = byLine[line] || []).push(issue);
+    });
+
+    var html = serialized.lines.map(function (line, index) {
+      var found = (byLine[index] || []).filter(function (issue) { return $('f-' + issue.severity).checked; });
+      var worst = found.reduce(function (acc, issue) {
+        return SEVERITY_ORDER[issue.severity] < SEVERITY_ORDER[acc] ? issue.severity : acc;
+      }, 'info');
+      var rowClass = found.length ? ' ' + worst : '';
+
+      var row = '<div class="row' + rowClass + '" id="L' + (index + 1) + '">' +
+        '<div class="n">' + (index + 1) + '</div><div class="c">' + highlight(line) + '</div></div>';
+
+      var notes = found.map(function (issue) {
+        return '<div class="note ' + issue.severity + '"><div class="n"></div><div class="t">' +
+          escapeHtml(issue.title) + (issue.path ? ' \u2014 ' + escapeHtml(issue.path) : '') + '</div></div>';
+      }).join('');
+
+      return row + notes;
+    }).join('');
+
+    annotatedEl.innerHTML = html;
+  }
+
+  function jumpToLine(line) {
+    var target = document.getElementById('L' + line);
+    if (!target) return;
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    target.classList.remove('flash');
+    void target.offsetWidth;
+    target.classList.add('flash');
+  }
+
+  ['f-error', 'f-warning', 'f-info'].forEach(function (id) {
+    $(id).addEventListener('change', function () {
+      if (!lastRun) return;
+      renderIssues(lastRun.issues, lastRun.serialized.map);
+      renderAnnotated(lastRun.serialized, lastRun.issues);
+    });
+  });
+
+  /* ---- toolbar ---- */
+
+  $('btn-verify').addEventListener('click', verify);
+
+  $('btn-format').addEventListener('click', function () {
+    var text = input.value.trim();
+    if (!text) return;
+    try {
+      input.value = JSON.stringify(JSON.parse(text), null, 2);
+      syncGutter();
+      toast('Formatted');
+      verify();
+    } catch (error) {
+      var info = parseError(text, error);
+      toast('Cannot format: ' + (info.where ? 'syntax error on line ' + info.where.line : 'invalid JSON'));
+      renderSyntaxError(text, info);
+      setParseStatus('Invalid JSON', 'error');
+    }
+  });
+
+  $('btn-minify').addEventListener('click', function () {
+    var text = input.value.trim();
+    if (!text) return;
+    try {
+      input.value = JSON.stringify(JSON.parse(text));
+      syncGutter();
+      toast('Minified');
+    } catch (error) {
+      toast('Cannot minify: invalid JSON');
+    }
+  });
+
+  $('btn-copy').addEventListener('click', function () { copy(input.value, 'Configuration copied'); });
+
+  copyResultBtn.addEventListener('click', function () {
+    if (!lastRun) return;
+    copy(lastRun.serialized.lines.join('\n'), 'Annotated JSON copied');
+  });
+
+  function copy(text, message) {
+    if (!text) { toast('Nothing to copy'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast(message); }, fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var helper = document.createElement('textarea');
+      helper.value = text;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'fixed';
+      helper.style.opacity = '0';
+      document.body.appendChild(helper);
+      helper.select();
+      try { document.execCommand('copy'); toast(message); } catch (e) { toast('Copy failed \u2014 select the text manually'); }
+      document.body.removeChild(helper);
+    }
+  }
+
+  $('btn-clear').addEventListener('click', function () {
+    input.value = '';
+    syncGutter();
+    lastRun = null;
+    fixBtn.disabled = true;
+    copyResultBtn.disabled = true;
+    summaryEl.innerHTML = '<span class="chip muted"><span class="dot"></span>Nothing checked yet</span>';
+    issuesEl.innerHTML = '<div class="empty"><strong>No results yet</strong>Paste a configuration and press <em>Verify</em>.</div>';
+    annotatedEl.innerHTML = '<div class="empty">The annotated view appears here after verification.</div>';
+    setParseStatus('Not validated', '');
+    input.focus();
+  });
+
+  $('btn-defaults').addEventListener('click', function () {
+    load(JSON.stringify(DEFAULTS, null, 2));
+  });
+
+  var SAMPLE_BROKEN = {
+    investor: {
+      home: {
+        pageTitle: { en: 'Overview' },
+        navigationWidget: {
+          visibility: true,
+          cards: [
+            { title: { en: 'Portfolio', fr: 'Portefeuille' }, subtitle: { en: 'Your holdings.', fr: 'Vos positions.' }, link: 'portfolio', icon: 'chart', visibility: 'true', filterByType: [] },
+            { title: { en: 'Activity', fr: 'Activit\u00e9' }, subtitle: { en: 'Your transactions.', fr: 'Vos transactions.' }, link: '/activity', icon: 'activity', visibility: true, filterByType: ['DEPOSIT'] }
+          ]
+        },
+        defaultPageLevelDateRange: '1_year',
+        showApiTagVersion: true
+      },
+      settings: { pageTitle: { en: 'Preferences', fr: 'Pr\u00e9f\u00e9rences' }, defaultPageLevelDateRange: 'year' },
+      showMarketValueAndNetDeposit: true,
+      reportsVersion: 'v2'
+    },
+    advisor: {
+      monitor: { overview: { showPortfolioActivityWidgets: true } },
+      securityProfile: { showNotesAndEvent: true }
+    }
+  };
+
+  $('btn-sample').addEventListener('click', function () {
+    load(JSON.stringify(SAMPLE_BROKEN, null, 2));
+    toast('Example loaded \u2014 it contains deliberate mistakes');
+  });
+
+  function load(text) {
+    input.value = text;
+    syncGutter();
+    verify();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showTab('validate');
+  }
+
+  fixBtn.addEventListener('click', function () {
+    if (!lastRun) return;
+    var clone = JSON.parse(JSON.stringify(lastRun.data));
+    var result = applyPlacementFixes(clone, lastRun.issues);
+
+    if (!result.moved.length) {
+      var occupied = result.skipped.filter(function (entry) { return entry.reason === 'occupied'; });
+      toast(occupied.length
+        ? 'Nothing moved — the correct path already has a value. Delete the misplaced copy instead.'
+        : 'Nothing moved — every misplaced field needs a manual decision');
+      return;
+    }
+
+    input.value = JSON.stringify(clone, null, 2);
+    syncGutter();
+    verify();
+    toast('Moved ' + result.moved.length + ' field' + (result.moved.length === 1 ? '' : 's') +
+      (result.skipped.length ? ', ' + result.skipped.length + ' need' + (result.skipped.length === 1 ? 's' : '') + ' a manual decision' : ''));
+  });
+
+  /* ---- tabs ---- */
+
+  function showTab(name) {
+    var isValidate = name === 'validate';
+    $('tab-validate').setAttribute('aria-selected', String(isValidate));
+    $('tab-docs').setAttribute('aria-selected', String(!isValidate));
+    $('view-validate').classList.toggle('hidden', !isValidate);
+    $('view-docs').classList.toggle('hidden', isValidate);
+  }
+
+  $('tab-validate').addEventListener('click', function () { showTab('validate'); });
+  $('tab-docs').addEventListener('click', function () { showTab('docs'); });
+
+  /* ---- theme ---- */
+
+  var storedTheme = null;
+  try { storedTheme = localStorage.getItem('uicv-theme'); } catch (e) { /* private mode */ }
+  if (storedTheme) document.documentElement.setAttribute('data-theme', storedTheme);
+
+  $('theme-toggle').addEventListener('click', function () {
+    var current = document.documentElement.getAttribute('data-theme');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = current ? (current === 'dark' ? 'light' : 'dark') : (prefersDark ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('uicv-theme', next); } catch (e) { /* ignore */ }
+  });
+
+  /* =====================================================================
+   * 11. Documentation tree
+   * ===================================================================== */
+
+  function renderDocs() {
+    var container = $('doc-tree');
+    container.innerHTML = renderNodeFields(SCHEMA, '', 0);
+
+    $('sample-min').textContent = JSON.stringify({
+      investor: {
+        home: { pageTitle: { en: 'Overview', fr: 'Aper\u00e7u' } },
+        documents: { pageTitle: { en: 'Statements', fr: 'Relev\u00e9s' }, defaultPageLevelDateRange: 'year' },
+        showTotalReturnWithBenchmark: true
+      },
+      advisor: {
+        securityProfile: { showNotesAndEvents: true }
+      }
+    }, null, 2);
+
+    $('sample-full').textContent = JSON.stringify(DEFAULTS, null, 2);
+  }
+
+  function renderNodeFields(node, basePath, depth) {
+    if (node.kind !== 'object') return '';
+    return Object.keys(node.fields).map(function (key) {
+      var child = node.fields[key];
+      var path = basePath ? basePath + '.' + key : key;
+      return renderField(key, child, path, depth);
+    }).join('');
+  }
+
+  function renderField(key, node, path, depth) {
+    var defaultValue = getByPath(DEFAULTS, path.replace(/\[\]/g, '.0'));
+    var rows = [];
+
+    rows.push('<dt>Path</dt><dd><code>' + escapeHtml(path) + '</code></dd>');
+    rows.push('<dt>Type</dt><dd><code>' + escapeHtml(fullTypeLabel(node)) + '</code></dd>');
+
+    if (node.kind === 'enum') {
+      rows.push('<dt>Allowed</dt><dd><div class="vals">' +
+        node.values.map(function (v) { return '<span class="val">' + escapeHtml(JSON.stringify(v)) + '</span>'; }).join('') +
+        '</div></dd>');
+    }
+    if (node.kind === 'boolean') {
+      rows.push('<dt>Allowed</dt><dd><div class="vals"><span class="val">true</span><span class="val">false</span></div></dd>');
+    }
+    if (node.kind === 'i18n') {
+      rows.push('<dt>Allowed</dt><dd>An object with <code>en</code> and <code>fr</code> string values. Both should be provided.</dd>');
+    }
+    var insideEntry = path.indexOf('[]') !== -1 || path.indexOf('.*') !== -1;
+
+    if (defaultValue !== undefined) {
+      rows.push('<dt>' + (insideEntry ? 'Example' : 'Default') + '</dt><dd><code>' +
+        escapeHtml(preview(defaultValue)) + '</code>' +
+        (insideEntry ? ' <span style="color:var(--text-faint)">\u2014 from the first default entry</span>' : '') + '</dd>');
+    }
+
+    rows.push('<dt>Required</dt><dd>' + (node.optional
+      ? 'Optional. Safe to omit.'
+      : insideEntry
+        ? 'Required in every entry you supply.'
+        : 'Optional in practice \u2014 omitting it keeps the default, but set it explicitly when you care about the value.') + '</dd>');
+
+    var notes = node.notes && node.notes.length
+      ? '<ul class="notes">' + node.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>'
+      : '';
+
+    var nested = '';
+    if (node.kind === 'object') {
+      nested = '<div class="nested">' + renderNodeFields(node, path, depth + 1) + '</div>';
+    } else if (node.kind === 'array' && node.item.kind === 'object') {
+      nested = '<p style="margin-top:12px;color:var(--text-faint);font-size:12px">Each array entry:</p><div class="nested">' +
+        renderNodeFields(node.item, path + '[]', depth + 1) + '</div>';
+    } else if (node.kind === 'record' && node.value.kind === 'object') {
+      nested = '<p style="margin-top:12px;color:var(--text-faint);font-size:12px">Each value:</p><div class="nested">' +
+        renderNodeFields(node.value, path + '.*', depth + 1) + '</div>';
+    }
+
+    return '<details class="field" data-path="' + escapeHtml(path.toLowerCase()) + '" data-text="' +
+      escapeHtml((path + ' ' + node.desc).toLowerCase()) + '"' + (depth === 0 ? ' open' : '') + '>' +
+      '<summary><span class="fpath">' + escapeHtml(key) + '</span>' +
+      '<span class="ftype">' + escapeHtml(typeLabel(node)) + '</span>' +
+      (node.optional ? '<span class="fopt">optional</span>' : '') +
+      '<span class="fsum">' + escapeHtml(node.desc) + '</span></summary>' +
+      '<div class="field-body"><dl>' + rows.join('') + '</dl>' + notes + nested + '</div></details>';
+  }
+
+  function fullTypeLabel(node) {
+    switch (node.kind) {
+      case 'enum': return node.values.map(quote).join(' | ');
+      case 'array': return 'Array<' + (node.item.kind === 'object' ? 'object' : fullTypeLabel(node.item)) + '>';
+      case 'record': return 'Record<string, object>';
+      case 'i18n': return '{ en: string; fr: string }';
+      default: return node.kind;
+    }
+  }
+
+  renderDocs();
+
+  $('doc-search').addEventListener('input', function (event) {
+    var query = event.target.value.trim().toLowerCase();
+    var fields = $('doc-tree').querySelectorAll('.field');
+    var matches = 0;
+
+    Array.prototype.forEach.call(fields, function (field) {
+      if (!query) {
+        field.classList.remove('hidden');
+        field.open = field.parentElement === $('doc-tree');
+        return;
+      }
+      var hit = field.getAttribute('data-text').indexOf(query) !== -1;
+      var childHit = field.querySelector('.field[data-text*="' + cssEscape(query) + '"]') !== null;
+      field.classList.toggle('hidden', !hit && !childHit);
+      if (hit || childHit) { field.open = true; matches++; }
+    });
+
+    $('doc-count').textContent = query ? matches + ' matching field' + (matches === 1 ? '' : 's') : '';
+  });
+
+  function cssEscape(value) { return value.replace(/["\\]/g, '\\$&'); }
+
+  $('doc-expand').addEventListener('click', function () {
+    Array.prototype.forEach.call($('doc-tree').querySelectorAll('.field'), function (f) { f.open = true; });
+  });
+
+  $('doc-collapse').addEventListener('click', function () {
+    Array.prototype.forEach.call($('doc-tree').querySelectorAll('.field'), function (f) { f.open = false; });
+  });
+
+  $('btn-load-min').addEventListener('click', function () { load($('sample-min').textContent); });
+  $('btn-load-full').addEventListener('click', function () { load($('sample-full').textContent); });
+
+  /* ---- boot ---- */
+
+  syncGutter();
+  input.focus();
+})();
+</script>
+
+</body>
+</html>
