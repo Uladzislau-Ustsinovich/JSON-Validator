@@ -1161,6 +1161,13 @@
               'Because the merge is index-based, always send all six entries, even when hiding some.'
             ]
           })
+        }, {
+          /* The 5.2-and-earlier shape, so a stale config gets named rather than called unknown. */
+          legacy: {
+            income: 'became <code>cards[5]</code> (Income Generated)',
+            deposits: 'became <code>cards[4]</code> (Deposits and Withdrawals)',
+            settings: 'became <code>cards[3]</code> (Settings)'
+          }
         }),
         contentSharing: obj('The content-sharing ("News and Tips") card on Home.', {
           visibility: bool('Whether the card is rendered.'),
@@ -1398,6 +1405,18 @@
       return;
     }
 
+    /* A key from a schema an earlier release used — name the migration instead of calling it unknown. */
+    var retired = parentNode.legacy && parentNode.legacy[key];
+    if (retired) {
+      add('error', childPath, 'Replaced in 6.0',
+        '<code>' + escapeHtml(key) + '</code> is the pre-6.0 shape, where the navigation widget held ' +
+        'keyed entries. 6.0 replaced them with the positional <code>cards</code> array, so this key is ' +
+        'ignored and the firm gets the six default cards.',
+        'It ' + retired + '. Migrate the whole widget at once: send all six cards in order, moving each ' +
+        'old entry to its position and renaming <code>pageTitle</code> to <code>title</code>.');
+      return;
+    }
+
     var canonical = NAME_INDEX[key] || [];
     var elsewhere = [];
     for (var i = 0; i < canonical.length; i++) {
@@ -1594,16 +1613,29 @@
       'Use a leading slash for in-app routes, e.g. <code>/portfolio</code>.');
   };
 
+  /**
+   * An entry is merged over the default at the same index, so a key the author
+   * left out is still present at runtime. Judge the entry on its merged value,
+   * not on the fragment that was supplied, or an omitted `link` reads as
+   * "undefined" and produces a false warning.
+   */
   navigationCard.check = function (card, path, add) {
     if (!card || typeof card !== 'object') return;
-    if (card.link === '/activity') return;
-    if (Array.isArray(card.filterByType) && card.filterByType.length) {
-      add('warning', path + '.filterByType',
-        'Filter has no effect',
-        'Transaction type filters are only applied by the Activity page, but this card links to <code>' +
-        escapeHtml(String(card.link)) + '</code>.',
-        'Use <code>[]</code>, or point the card at <code>/activity</code>.');
-    }
+
+    var link = Object.prototype.hasOwnProperty.call(card, 'link')
+      ? card.link
+      : getByPath(ACTIVE.defaults, path + '.link');
+
+    if (link === '/activity') return;
+    if (!Array.isArray(card.filterByType) || !card.filterByType.length) return;
+
+    var inherited = !Object.prototype.hasOwnProperty.call(card, 'link');
+    add('warning', path + '.filterByType',
+      'Filter has no effect',
+      'Transaction type filters are only applied by the Activity page, but this card links to <code>' +
+      escapeHtml(String(link)) + '</code>' +
+      (inherited ? ', inherited from the default card at this position' : '') + '.',
+      'Use <code>[]</code>, or point the card at <code>/activity</code>.');
   };
 
   SCHEMA.fields.investor.check = function (investor, path, add) {
